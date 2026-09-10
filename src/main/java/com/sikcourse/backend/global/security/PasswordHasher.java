@@ -11,7 +11,7 @@ import java.util.Base64;
 public class PasswordHasher {
 
     private static final String ALGORITHM = "PBKDF2WithHmacSHA256";
-    private static final int ITERATIONS = 120_000;
+    private static final int ITERATIONS = 600_000;
     private static final int KEY_LENGTH = 256;
     private static final int SALT_LENGTH = 16;
     private static final String DELIMITER = "\\$";
