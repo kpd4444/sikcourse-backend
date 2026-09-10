@@ -31,3 +31,7 @@ tour-api:
   service-key: ${TOUR_API_SERVICE_KEY:}
   mobile-os: ETC
   mobile-app: SIKCOURSE
+
+jwt:
+  secret: ${JWT_SECRET}
+  access-token-expiration-millis: ${JWT_ACCESS_TOKEN_EXPIRATION_MILLIS:3600000}
