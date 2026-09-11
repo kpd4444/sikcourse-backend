@@ -5,16 +5,21 @@ import com.sikcourse.backend.domain.health.entity.Gender;
 import com.sikcourse.backend.domain.health.entity.HealthProfile;
 import com.sikcourse.backend.domain.health.error.HealthErrorCode;
 import com.sikcourse.backend.domain.health.repository.HealthProfileRepository;
+import com.sikcourse.backend.domain.meal.dto.CreateMealRecordRequest;
 import com.sikcourse.backend.domain.meal.dto.DailyNutritionSummaryResponse;
 import com.sikcourse.backend.domain.meal.entity.MealRecord;
 import com.sikcourse.backend.domain.meal.entity.MealType;
 import com.sikcourse.backend.domain.meal.entity.Menu;
+import com.sikcourse.backend.domain.meal.error.MealErrorCode;
 import com.sikcourse.backend.domain.meal.repository.MealRecordRepository;
 import com.sikcourse.backend.global.error.exception.GeneralException;
 import org.junit.jupiter.api.Test;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -28,6 +33,11 @@ import static org.mockito.Mockito.when;
 
 class MealRecordServiceTest {
 
+    private static final Clock FIXED_CLOCK = Clock.fixed(
+            Instant.parse("2026-09-11T03:00:00Z"),
+            ZoneId.of("Asia/Seoul")
+    );
+
     @Test
     void getTodaySummaryCalculatesConsumedAndRemainingNutrition() {
         MealRecordRepository mealRecordRepository = mock(MealRecordRepository.class);
@@ -36,7 +46,8 @@ class MealRecordServiceTest {
         MealRecordService mealRecordService = new MealRecordService(
                 mealRecordRepository,
                 healthProfileRepository,
-                menuService
+                menuService,
+                FIXED_CLOCK
         );
 
         when(healthProfileRepository.findByUserId(1L)).thenReturn(Optional.of(healthProfile()));
@@ -72,7 +83,8 @@ class MealRecordServiceTest {
         MealRecordService mealRecordService = new MealRecordService(
                 mealRecordRepository,
                 healthProfileRepository,
-                menuService
+                menuService,
+                FIXED_CLOCK
         );
 
         when(healthProfileRepository.findByUserId(1L)).thenReturn(Optional.empty());
@@ -80,6 +92,28 @@ class MealRecordServiceTest {
         assertThatThrownBy(() -> mealRecordService.getTodaySummary(1L))
                 .isInstanceOfSatisfying(GeneralException.class, exception ->
                         assertThat(exception.getErrorCode()).isEqualTo(HealthErrorCode.HEALTH_PROFILE_NOT_FOUND));
+    }
+
+    @Test
+    void createRejectsFutureEatenAt() {
+        MealRecordRepository mealRecordRepository = mock(MealRecordRepository.class);
+        HealthProfileRepository healthProfileRepository = mock(HealthProfileRepository.class);
+        MenuService menuService = mock(MenuService.class);
+        MealRecordService mealRecordService = new MealRecordService(
+                mealRecordRepository,
+                healthProfileRepository,
+                menuService,
+                FIXED_CLOCK
+        );
+        CreateMealRecordRequest request = new CreateMealRecordRequest(
+                1L,
+                MealType.LUNCH,
+                LocalDateTime.of(2026, 9, 11, 12, 0, 1)
+        );
+
+        assertThatThrownBy(() -> mealRecordService.create(1L, request))
+                .isInstanceOfSatisfying(GeneralException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(MealErrorCode.INVALID_EATEN_AT));
     }
 
     private HealthProfile healthProfile() {

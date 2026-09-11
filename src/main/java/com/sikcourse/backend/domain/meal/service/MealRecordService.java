@@ -8,15 +8,16 @@ import com.sikcourse.backend.domain.meal.dto.DailyNutritionSummaryResponse;
 import com.sikcourse.backend.domain.meal.dto.MealRecordResponse;
 import com.sikcourse.backend.domain.meal.entity.MealRecord;
 import com.sikcourse.backend.domain.meal.entity.Menu;
+import com.sikcourse.backend.domain.meal.error.MealErrorCode;
 import com.sikcourse.backend.domain.meal.repository.MealRecordRepository;
 import com.sikcourse.backend.global.error.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -26,14 +27,14 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class MealRecordService {
 
-    private static final ZoneId SERVICE_ZONE_ID = ZoneId.of("Asia/Seoul");
-
     private final MealRecordRepository mealRecordRepository;
     private final HealthProfileRepository healthProfileRepository;
     private final MenuService menuService;
+    private final Clock clock;
 
     @Transactional
     public MealRecordResponse create(Long userId, CreateMealRecordRequest request) {
+        validateEatenAt(request.eatenAt());
         Menu menu = menuService.getById(request.menuId());
         MealRecord mealRecord = MealRecord.builder()
                 .userId(userId)
@@ -82,7 +83,7 @@ public class MealRecordService {
     }
 
     private List<MealRecord> findTodayRecords(Long userId) {
-        LocalDate today = LocalDate.now(SERVICE_ZONE_ID);
+        LocalDate today = LocalDate.now(clock);
         LocalDateTime startInclusive = today.atStartOfDay();
         LocalDateTime endExclusive = today.plusDays(1).atStartOfDay();
         return mealRecordRepository.findAllByUserIdAndEatenAtGreaterThanEqualAndEatenAtLessThanOrderByEatenAtDesc(
@@ -90,5 +91,11 @@ public class MealRecordService {
                 startInclusive,
                 endExclusive
         );
+    }
+
+    private void validateEatenAt(LocalDateTime eatenAt) {
+        if (eatenAt.isAfter(LocalDateTime.now(clock))) {
+            throw new GeneralException(MealErrorCode.INVALID_EATEN_AT);
+        }
     }
 }

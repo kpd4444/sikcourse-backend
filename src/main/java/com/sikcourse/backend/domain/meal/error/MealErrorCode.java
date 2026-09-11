@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum MealErrorCode implements BaseErrorCode {
 
+    INVALID_EATEN_AT("MEAL_400", "식사 시간은 현재 또는 과거여야 합니다.", HttpStatus.BAD_REQUEST),
     MENU_NOT_FOUND("MEAL_404", "메뉴를 찾을 수 없습니다.", HttpStatus.NOT_FOUND);
 
     private final String code;
