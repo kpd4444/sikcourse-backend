@@ -33,6 +33,15 @@ public class RecommendationController {
         return ApiResponse.success(recommendationService.recommendMenus(authUser.userId(), tripId));
     }
 
+    @Operation(summary = "여행지 기반 디저트 추천")
+    @GetMapping("/desserts")
+    public ApiResponse<List<RecommendedMenuResponse>> recommendDesserts(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long tripId
+    ) {
+        return ApiResponse.success(recommendationService.recommendDesserts(authUser.userId(), tripId));
+    }
+
     @Operation(summary = "여행지 기반 음식점 추천")
     @GetMapping("/places")
     public ApiResponse<List<RecommendedPlaceResponse>> recommendPlaces(

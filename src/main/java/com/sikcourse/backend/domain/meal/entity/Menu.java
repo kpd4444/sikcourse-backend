@@ -3,6 +3,8 @@ package com.sikcourse.backend.domain.meal.entity;
 import com.sikcourse.backend.global.entity.BaseTimeEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -28,6 +30,10 @@ public class Menu extends BaseTimeEntity {
     @Column(nullable = false, length = 100)
     private String name;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "menu_type", nullable = false, length = 20)
+    private MenuType menuType;
+
     @Column(nullable = false)
     private Integer calories;
 
@@ -38,9 +44,10 @@ public class Menu extends BaseTimeEntity {
     private Integer sugar;
 
     @Builder
-    private Menu(Long placeId, String name, Integer calories, Integer sodium, Integer sugar) {
+    private Menu(Long placeId, String name, MenuType menuType, Integer calories, Integer sodium, Integer sugar) {
         this.placeId = placeId;
         this.name = name;
+        this.menuType = menuType == null ? MenuType.MEAL : menuType;
         this.calories = calories;
         this.sodium = sodium;
         this.sugar = sugar;
