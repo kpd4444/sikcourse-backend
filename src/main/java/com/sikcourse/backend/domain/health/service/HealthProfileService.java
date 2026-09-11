@@ -8,6 +8,7 @@ import com.sikcourse.backend.domain.health.error.HealthErrorCode;
 import com.sikcourse.backend.domain.health.repository.HealthProfileRepository;
 import com.sikcourse.backend.global.error.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -80,22 +81,15 @@ public class HealthProfileService {
     }
 
     private boolean isUserIdUniqueConstraintViolation(DataIntegrityViolationException exception) {
-        String message = collectExceptionMessages(exception).toLowerCase();
-        return message.contains("uk_health_profiles_user_id")
-                || (message.contains("duplicate")
-                && message.contains("health_profiles")
-                && message.contains("user_id"));
-    }
-
-    private String collectExceptionMessages(Throwable throwable) {
-        StringBuilder builder = new StringBuilder();
-        Throwable current = throwable;
+        Throwable current = exception;
         while (current != null) {
-            if (current.getMessage() != null) {
-                builder.append(current.getMessage()).append(' ');
+            if (current instanceof ConstraintViolationException constraintViolationException) {
+                return "uk_health_profiles_user_id".equalsIgnoreCase(
+                        constraintViolationException.getConstraintName()
+                );
             }
             current = current.getCause();
         }
-        return builder.toString();
+        return false;
     }
 }
