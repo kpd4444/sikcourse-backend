@@ -32,9 +32,21 @@ public class TourApiClient {
     private final TourApiProperties properties;
 
     public TourApiResponse<TourRestaurantItem> areaBasedList2(String areaCode, Integer pageNo, Integer numOfRows) {
+        return areaBasedList2(areaCode, null, pageNo, numOfRows);
+    }
+
+    public TourApiResponse<TourRestaurantItem> areaBasedList2(
+            String areaCode,
+            String sigunguCode,
+            Integer pageNo,
+            Integer numOfRows
+    ) {
         Map<String, String> params = defaultParams(pageNo, numOfRows);
         params.put("contentTypeId", RESTAURANT_CONTENT_TYPE_ID);
         params.put("areaCode", areaCode);
+        if (sigunguCode != null && !sigunguCode.isBlank()) {
+            params.put("sigunguCode", sigunguCode);
+        }
         params.put("arrange", "A");
 
         return get("/areaBasedList2", params, TourRestaurantItem.class);
