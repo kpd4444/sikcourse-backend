@@ -4,6 +4,8 @@ import com.sikcourse.backend.global.entity.BaseTimeEntity;
 import com.sikcourse.backend.infra.tourapi.dto.TourRestaurantItem;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -36,6 +38,10 @@ public class Place extends BaseTimeEntity {
 
     @Column(name = "content_type_id", nullable = false, length = 10)
     private String contentTypeId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "place_type", length = 20)
+    private PlaceType placeType;
 
     @Column(nullable = false, length = 200)
     private String title;
@@ -80,6 +86,7 @@ public class Place extends BaseTimeEntity {
     private Place(
             String contentId,
             String contentTypeId,
+            PlaceType placeType,
             String title,
             String addr1,
             String addr2,
@@ -96,6 +103,7 @@ public class Place extends BaseTimeEntity {
     ) {
         this.contentId = contentId;
         this.contentTypeId = contentTypeId;
+        this.placeType = placeType == null ? PlaceType.RESTAURANT : placeType;
         this.title = title;
         this.addr1 = addr1;
         this.addr2 = addr2;
@@ -112,9 +120,14 @@ public class Place extends BaseTimeEntity {
     }
 
     public static Place from(TourRestaurantItem item) {
+        return from(item, PlaceType.RESTAURANT);
+    }
+
+    public static Place from(TourRestaurantItem item, PlaceType placeType) {
         return Place.builder()
                 .contentId(item.contentid())
                 .contentTypeId(item.contenttypeid())
+                .placeType(placeType)
                 .title(item.title())
                 .addr1(item.addr1())
                 .addr2(item.addr2())
@@ -132,7 +145,12 @@ public class Place extends BaseTimeEntity {
     }
 
     public void updateFrom(TourRestaurantItem item) {
+        updateFrom(item, PlaceType.RESTAURANT);
+    }
+
+    public void updateFrom(TourRestaurantItem item, PlaceType placeType) {
         this.contentTypeId = item.contenttypeid();
+        this.placeType = placeType == null ? PlaceType.RESTAURANT : placeType;
         this.title = item.title();
         this.addr1 = item.addr1();
         this.addr2 = item.addr2();

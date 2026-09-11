@@ -1,8 +1,11 @@
 package com.sikcourse.backend.domain.meal.controller;
 
 import com.sikcourse.backend.domain.meal.dto.CreateMealRecordRequest;
+import com.sikcourse.backend.domain.meal.dto.CompleteMealRequest;
+import com.sikcourse.backend.domain.meal.dto.CompleteMealResponse;
 import com.sikcourse.backend.domain.meal.dto.DailyNutritionSummaryResponse;
 import com.sikcourse.backend.domain.meal.dto.MealRecordResponse;
+import com.sikcourse.backend.domain.meal.service.MealCompletionService;
 import com.sikcourse.backend.domain.meal.service.MealRecordService;
 import com.sikcourse.backend.global.response.ApiResponse;
 import com.sikcourse.backend.global.security.AuthUser;
@@ -26,6 +29,7 @@ import java.util.List;
 public class MealRecordController {
 
     private final MealRecordService mealRecordService;
+    private final MealCompletionService mealCompletionService;
 
     @Operation(summary = "식사 기록 등록")
     @PostMapping
@@ -34,6 +38,15 @@ public class MealRecordController {
             @Valid @RequestBody CreateMealRecordRequest request
     ) {
         return ApiResponse.success(mealRecordService.create(authUser.userId(), request));
+    }
+
+    @Operation(summary = "식사 완료")
+    @PostMapping("/complete")
+    public ApiResponse<CompleteMealResponse> complete(
+            @AuthenticationPrincipal AuthUser authUser,
+            @Valid @RequestBody CompleteMealRequest request
+    ) {
+        return ApiResponse.success(mealCompletionService.complete(authUser.userId(), request));
     }
 
     @Operation(summary = "오늘 식사 기록 목록 조회")

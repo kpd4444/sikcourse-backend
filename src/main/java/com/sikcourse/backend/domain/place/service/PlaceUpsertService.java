@@ -1,6 +1,7 @@
 package com.sikcourse.backend.domain.place.service;
 
 import com.sikcourse.backend.domain.place.entity.Place;
+import com.sikcourse.backend.domain.place.entity.PlaceType;
 import com.sikcourse.backend.domain.place.repository.PlaceRepository;
 import com.sikcourse.backend.infra.tourapi.dto.TourRestaurantItem;
 import lombok.RequiredArgsConstructor;
@@ -20,10 +21,15 @@ public class PlaceUpsertService {
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public PlaceUpsertResult upsert(TourRestaurantItem item) {
+        return upsert(item, PlaceType.RESTAURANT);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public PlaceUpsertResult upsert(TourRestaurantItem item, PlaceType placeType) {
         Place place = placeRepository.findByContentId(item.contentid()).orElse(null);
         if (place == null) {
             try {
-                placeRepository.saveAndFlush(Place.from(item));
+                placeRepository.saveAndFlush(Place.from(item, placeType));
                 return PlaceUpsertResult.CREATED;
             } catch (DataIntegrityViolationException exception) {
                 if (isContentIdUniqueConstraintViolation(exception)) {
@@ -33,15 +39,20 @@ public class PlaceUpsertService {
             }
         }
 
-        place.updateFrom(item);
+        place.updateFrom(item, placeType);
         return PlaceUpsertResult.UPDATED;
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public PlaceUpsertResult updateExisting(TourRestaurantItem item) {
+        return updateExisting(item, PlaceType.RESTAURANT);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public PlaceUpsertResult updateExisting(TourRestaurantItem item, PlaceType placeType) {
         Place place = placeRepository.findByContentId(item.contentid())
                 .orElseThrow(() -> new DuplicatePlaceContentIdException(item.contentid()));
-        place.updateFrom(item);
+        place.updateFrom(item, placeType);
         return PlaceUpsertResult.UPDATED;
     }
 

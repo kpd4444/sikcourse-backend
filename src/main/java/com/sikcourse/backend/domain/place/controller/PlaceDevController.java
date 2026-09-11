@@ -31,4 +31,15 @@ public class PlaceDevController {
     ) {
         return ApiResponse.success(placeService.syncRestaurants(areaCode, sigunguCode, pageNo, numOfRows));
     }
+
+    @Operation(summary = "Sync TourAPI walk places")
+    @PostMapping("/sync/walks")
+    public ApiResponse<PlaceSyncResponse> syncWalks(
+            @RequestParam(defaultValue = "39") String areaCode,
+            @RequestParam(required = false) String sigunguCode,
+            @RequestParam(defaultValue = "1") Integer pageNo,
+            @RequestParam(defaultValue = "10") Integer numOfRows
+    ) {
+        return ApiResponse.success(placeService.syncWalks(areaCode, sigunguCode, pageNo, numOfRows));
+    }
 }
