@@ -7,6 +7,7 @@ import com.sikcourse.backend.domain.place.repository.PlaceRepository;
 import com.sikcourse.backend.domain.recommendation.dto.RecommendedMenuResponse;
 import com.sikcourse.backend.domain.recommendation.dto.RecommendedPlaceResponse;
 import com.sikcourse.backend.domain.suitability.dto.MenuSuitabilityResponse;
+import com.sikcourse.backend.domain.suitability.service.MenuSuitabilityContext;
 import com.sikcourse.backend.domain.suitability.service.MenuSuitabilityService;
 import com.sikcourse.backend.domain.trip.entity.Trip;
 import com.sikcourse.backend.domain.trip.error.TripErrorCode;
@@ -45,9 +46,10 @@ public class RecommendationService {
                 .map(Place::getId)
                 .toList();
         List<Menu> menus = menuRepository.findAllByPlaceIdInOrderByNameAsc(placeIds);
+        MenuSuitabilityContext context = menuSuitabilityService.createContext(userId);
 
         return menus.stream()
-                .map(menu -> toRecommendedMenu(userId, placesById.get(menu.getPlaceId()), menu))
+                .map(menu -> toRecommendedMenu(context, placesById.get(menu.getPlaceId()), menu))
                 .sorted(menuRecommendationComparator())
                 .toList();
     }
@@ -69,8 +71,8 @@ public class RecommendationService {
                 .toList();
     }
 
-    private RecommendedMenuResponse toRecommendedMenu(Long userId, Place place, Menu menu) {
-        MenuSuitabilityResponse suitability = menuSuitabilityService.calculate(userId, menu.getId());
+    private RecommendedMenuResponse toRecommendedMenu(MenuSuitabilityContext context, Place place, Menu menu) {
+        MenuSuitabilityResponse suitability = menuSuitabilityService.calculate(context, menu);
         return new RecommendedMenuResponse(
                 place.getId(),
                 place.getTitle(),

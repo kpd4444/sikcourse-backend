@@ -45,11 +45,10 @@ public class MenuSuitabilityService {
 
     @Transactional(readOnly = true)
     public MenuSuitabilityResponse calculate(Long userId, Long menuId) {
-        HealthProfile healthProfile = getHealthProfile(userId);
-        NutritionConsumed consumed = getTodayConsumed(userId);
+        MenuSuitabilityContext context = createContext(userId);
         Menu menu = getMenu(menuId);
 
-        return calculate(healthProfile, consumed, menu);
+        return calculate(context, menu);
     }
 
     @Transactional(readOnly = true)
@@ -58,14 +57,37 @@ public class MenuSuitabilityService {
             throw new GeneralException(PlaceErrorCode.PLACE_NOT_FOUND);
         }
 
-        HealthProfile healthProfile = getHealthProfile(userId);
-        NutritionConsumed consumed = getTodayConsumed(userId);
+        MenuSuitabilityContext context = createContext(userId);
         return menuRepository.findAllByPlaceIdOrderByNameAsc(placeId).stream()
-                .map(menu -> calculate(healthProfile, consumed, menu))
+                .map(menu -> calculate(context, menu))
                 .sorted(Comparator
                         .comparing(MenuSuitabilityResponse::score).reversed()
                         .thenComparing(MenuSuitabilityResponse::menuName))
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public MenuSuitabilityContext createContext(Long userId) {
+        HealthProfile healthProfile = getHealthProfile(userId);
+        NutritionConsumed consumed = getTodayConsumed(userId);
+        return new MenuSuitabilityContext(
+                healthProfile,
+                consumed.calories(),
+                consumed.sodium(),
+                consumed.sugar()
+        );
+    }
+
+    public MenuSuitabilityResponse calculate(MenuSuitabilityContext context, Menu menu) {
+        return calculate(
+                context.healthProfile(),
+                new NutritionConsumed(
+                        context.consumedCalories(),
+                        context.consumedSodium(),
+                        context.consumedSugar()
+                ),
+                menu
+        );
     }
 
     private MenuSuitabilityResponse calculate(
