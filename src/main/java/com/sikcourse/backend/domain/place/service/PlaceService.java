@@ -20,8 +20,8 @@ public class PlaceService {
 
     private final PlaceRepository placeRepository;
     private final TourApiClient tourApiClient;
+    private final PlaceUpsertService placeUpsertService;
 
-    @Transactional
     public PlaceSyncResponse syncRestaurants(String areaCode, String sigunguCode, Integer pageNo, Integer numOfRows) {
         List<TourRestaurantItem> items = tourApiClient
                 .areaBasedList2(areaCode, sigunguCode, pageNo, numOfRows)
@@ -31,12 +31,10 @@ public class PlaceService {
         int updatedCount = 0;
 
         for (TourRestaurantItem item : items) {
-            Place place = placeRepository.findByContentId(item.contentid()).orElse(null);
-            if (place == null) {
-                placeRepository.save(Place.from(item));
+            PlaceUpsertResult result = upsert(item);
+            if (result == PlaceUpsertResult.CREATED) {
                 createdCount++;
             } else {
-                place.updateFrom(item);
                 updatedCount++;
             }
         }
@@ -70,5 +68,13 @@ public class PlaceService {
 
     private boolean isBlank(String value) {
         return value == null || value.isBlank();
+    }
+
+    private PlaceUpsertResult upsert(TourRestaurantItem item) {
+        try {
+            return placeUpsertService.upsert(item);
+        } catch (DuplicatePlaceContentIdException exception) {
+            return placeUpsertService.updateExisting(item);
+        }
     }
 }
