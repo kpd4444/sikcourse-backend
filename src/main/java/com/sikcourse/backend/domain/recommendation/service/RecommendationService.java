@@ -1,6 +1,7 @@
 package com.sikcourse.backend.domain.recommendation.service;
 
 import com.sikcourse.backend.domain.meal.entity.Menu;
+import com.sikcourse.backend.domain.meal.entity.MenuType;
 import com.sikcourse.backend.domain.meal.repository.MenuRepository;
 import com.sikcourse.backend.domain.place.entity.Place;
 import com.sikcourse.backend.domain.place.repository.PlaceRepository;
@@ -34,6 +35,15 @@ public class RecommendationService {
 
     @Transactional(readOnly = true)
     public List<RecommendedMenuResponse> recommendMenus(Long userId, Long tripId) {
+        return recommendMenus(userId, tripId, null);
+    }
+
+    @Transactional(readOnly = true)
+    public List<RecommendedMenuResponse> recommendDesserts(Long userId, Long tripId) {
+        return recommendMenus(userId, tripId, MenuType.DESSERT);
+    }
+
+    private List<RecommendedMenuResponse> recommendMenus(Long userId, Long tripId, MenuType menuType) {
         Trip trip = getTrip(userId, tripId);
         List<Place> places = findTripPlaces(trip);
         Map<Long, Place> placesById = places.stream()
@@ -45,7 +55,7 @@ public class RecommendationService {
         List<Long> placeIds = places.stream()
                 .map(Place::getId)
                 .toList();
-        List<Menu> menus = menuRepository.findAllByPlaceIdInOrderByNameAsc(placeIds);
+        List<Menu> menus = findMenus(placeIds, menuType);
         MenuSuitabilityContext context = menuSuitabilityService.createContext(userId);
 
         return menus.stream()
@@ -78,6 +88,7 @@ public class RecommendationService {
                 place.getTitle(),
                 suitability.menuId(),
                 suitability.menuName(),
+                menu.getMenuType(),
                 suitability.score(),
                 suitability.level(),
                 suitability.reasons()
@@ -114,6 +125,13 @@ public class RecommendationService {
     private Place findPlace(Long placeId) {
         return placeRepository.findById(placeId)
                 .orElseThrow(() -> new IllegalStateException("추천 장소를 찾을 수 없습니다."));
+    }
+
+    private List<Menu> findMenus(List<Long> placeIds, MenuType menuType) {
+        if (menuType == null) {
+            return menuRepository.findAllByPlaceIdInOrderByNameAsc(placeIds);
+        }
+        return menuRepository.findAllByPlaceIdInAndMenuTypeOrderByNameAsc(placeIds, menuType);
     }
 
     private Comparator<RecommendedMenuResponse> menuRecommendationComparator() {

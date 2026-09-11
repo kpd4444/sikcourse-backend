@@ -30,6 +30,7 @@ public class MenuService {
         Menu menu = Menu.builder()
                 .placeId(placeId)
                 .name(request.name())
+                .menuType(request.menuType())
                 .calories(request.calories())
                 .sodium(request.sodium())
                 .sugar(request.sugar())

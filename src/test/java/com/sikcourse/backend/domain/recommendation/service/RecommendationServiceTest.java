@@ -4,6 +4,7 @@ import com.sikcourse.backend.domain.health.entity.ActivityLevel;
 import com.sikcourse.backend.domain.health.entity.Gender;
 import com.sikcourse.backend.domain.health.entity.HealthProfile;
 import com.sikcourse.backend.domain.meal.entity.Menu;
+import com.sikcourse.backend.domain.meal.entity.MenuType;
 import com.sikcourse.backend.domain.meal.repository.MenuRepository;
 import com.sikcourse.backend.domain.place.entity.Place;
 import com.sikcourse.backend.domain.place.repository.PlaceRepository;
@@ -117,6 +118,35 @@ class RecommendationServiceTest {
         assertThat(context.service.recommendMenus(1L, 1L)).isEmpty();
     }
 
+    @Test
+    void recommendDessertsReturnsOnlyDessertMenusSortedBySuitabilityScore() {
+        TestContext context = testContext();
+        Trip trip = trip();
+        Place firstPlace = place(1L, "Jeju Cafe");
+        Place secondPlace = place(2L, "Jeju Bakery");
+        Menu goodDessert = menu(1L, 1L, "Citrus Gelato", MenuType.DESSERT);
+        Menu cautionDessert = menu(2L, 2L, "Chocolate Cake", MenuType.DESSERT);
+        MenuSuitabilityContext suitabilityContext = suitabilityContext();
+
+        when(context.tripRepository.findByIdAndUserId(1L, 1L)).thenReturn(Optional.of(trip));
+        when(context.placeRepository.findAllByAreaCodeAndSigunguCodeOrderByTitleAsc("39", "4"))
+                .thenReturn(List.of(firstPlace, secondPlace));
+        when(context.menuRepository.findAllByPlaceIdInAndMenuTypeOrderByNameAsc(List.of(1L, 2L), MenuType.DESSERT))
+                .thenReturn(List.of(cautionDessert, goodDessert));
+        when(context.menuSuitabilityService.createContext(1L)).thenReturn(suitabilityContext);
+        when(context.menuSuitabilityService.calculate(suitabilityContext, goodDessert))
+                .thenReturn(suitability(1L, "Citrus Gelato", 88, SuitabilityLevel.GOOD));
+        when(context.menuSuitabilityService.calculate(suitabilityContext, cautionDessert))
+                .thenReturn(suitability(2L, "Chocolate Cake", 52, SuitabilityLevel.CAUTION));
+
+        List<RecommendedMenuResponse> responses = context.service.recommendDesserts(1L, 1L);
+
+        assertThat(responses).extracting(RecommendedMenuResponse::menuName)
+                .containsExactly("Citrus Gelato", "Chocolate Cake");
+        assertThat(responses).extracting(RecommendedMenuResponse::menuType)
+                .containsOnly(MenuType.DESSERT);
+    }
+
     private TestContext testContext() {
         TripRepository tripRepository = mock(TripRepository.class);
         PlaceRepository placeRepository = mock(PlaceRepository.class);
@@ -191,9 +221,14 @@ class RecommendationServiceTest {
     }
 
     private Menu menu(Long id, Long placeId, String name) {
+        return menu(id, placeId, name, MenuType.MEAL);
+    }
+
+    private Menu menu(Long id, Long placeId, String name, MenuType menuType) {
         Menu menu = Menu.builder()
                 .placeId(placeId)
                 .name(name)
+                .menuType(menuType)
                 .calories(400)
                 .sodium(700)
                 .sugar(5)
