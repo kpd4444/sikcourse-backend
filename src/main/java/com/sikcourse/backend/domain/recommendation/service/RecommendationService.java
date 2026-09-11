@@ -4,9 +4,11 @@ import com.sikcourse.backend.domain.meal.entity.Menu;
 import com.sikcourse.backend.domain.meal.entity.MenuType;
 import com.sikcourse.backend.domain.meal.repository.MenuRepository;
 import com.sikcourse.backend.domain.place.entity.Place;
+import com.sikcourse.backend.domain.place.entity.PlaceType;
 import com.sikcourse.backend.domain.place.repository.PlaceRepository;
 import com.sikcourse.backend.domain.recommendation.dto.RecommendedMenuResponse;
 import com.sikcourse.backend.domain.recommendation.dto.RecommendedPlaceResponse;
+import com.sikcourse.backend.domain.recommendation.dto.RecommendedWalkResponse;
 import com.sikcourse.backend.domain.suitability.dto.MenuSuitabilityResponse;
 import com.sikcourse.backend.domain.suitability.service.MenuSuitabilityContext;
 import com.sikcourse.backend.domain.suitability.service.MenuSuitabilityService;
@@ -81,6 +83,14 @@ public class RecommendationService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<RecommendedWalkResponse> recommendWalks(Long userId, Long tripId) {
+        Trip trip = getTrip(userId, tripId);
+        return findTripPlaces(trip, PlaceType.WALK).stream()
+                .map(this::toRecommendedWalk)
+                .toList();
+    }
+
     private RecommendedMenuResponse toRecommendedMenu(MenuSuitabilityContext context, Place place, Menu menu) {
         MenuSuitabilityResponse suitability = menuSuitabilityService.calculate(context, menu);
         return new RecommendedMenuResponse(
@@ -113,6 +123,21 @@ public class RecommendationService {
     }
 
     private List<Place> findTripPlaces(Trip trip) {
+        return findTripPlaces(trip, null);
+    }
+
+    private List<Place> findTripPlaces(Trip trip, PlaceType placeType) {
+        if (placeType != null) {
+            if (trip.getSigunguCode() == null || trip.getSigunguCode().isBlank()) {
+                return placeRepository.findAllByAreaCodeAndPlaceTypeOrderByTitleAsc(trip.getAreaCode(), placeType);
+            }
+            return placeRepository.findAllByAreaCodeAndSigunguCodeAndPlaceTypeOrderByTitleAsc(
+                    trip.getAreaCode(),
+                    trip.getSigunguCode(),
+                    placeType
+            );
+        }
+
         if (trip.getSigunguCode() == null || trip.getSigunguCode().isBlank()) {
             return placeRepository.findAllByAreaCodeOrderByTitleAsc(trip.getAreaCode());
         }
@@ -125,6 +150,17 @@ public class RecommendationService {
     private Place findPlace(Long placeId) {
         return placeRepository.findById(placeId)
                 .orElseThrow(() -> new IllegalStateException("추천 장소를 찾을 수 없습니다."));
+    }
+
+    private RecommendedWalkResponse toRecommendedWalk(Place place) {
+        return new RecommendedWalkResponse(
+                place.getId(),
+                place.getTitle(),
+                place.getAddr1(),
+                place.getMapX(),
+                place.getMapY(),
+                place.getFirstImage()
+        );
     }
 
     private List<Menu> findMenus(List<Long> placeIds, MenuType menuType) {

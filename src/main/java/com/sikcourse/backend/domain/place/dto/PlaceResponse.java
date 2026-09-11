@@ -1,6 +1,7 @@
 package com.sikcourse.backend.domain.place.dto;
 
 import com.sikcourse.backend.domain.place.entity.Place;
+import com.sikcourse.backend.domain.place.entity.PlaceType;
 
 import java.math.BigDecimal;
 
@@ -8,6 +9,7 @@ public record PlaceResponse(
         Long placeId,
         String contentId,
         String contentTypeId,
+        PlaceType placeType,
         String title,
         String addr1,
         String addr2,
@@ -28,6 +30,7 @@ public record PlaceResponse(
                 place.getId(),
                 place.getContentId(),
                 place.getContentTypeId(),
+                place.getPlaceType(),
                 place.getTitle(),
                 place.getAddr1(),
                 place.getAddr2(),

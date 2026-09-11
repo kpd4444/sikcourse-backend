@@ -2,6 +2,7 @@ package com.sikcourse.backend.domain.recommendation.controller;
 
 import com.sikcourse.backend.domain.recommendation.dto.RecommendedMenuResponse;
 import com.sikcourse.backend.domain.recommendation.dto.RecommendedPlaceResponse;
+import com.sikcourse.backend.domain.recommendation.dto.RecommendedWalkResponse;
 import com.sikcourse.backend.domain.recommendation.service.RecommendationService;
 import com.sikcourse.backend.global.response.ApiResponse;
 import com.sikcourse.backend.global.security.AuthUser;
@@ -49,5 +50,14 @@ public class RecommendationController {
             @PathVariable Long tripId
     ) {
         return ApiResponse.success(recommendationService.recommendPlaces(authUser.userId(), tripId));
+    }
+
+    @Operation(summary = "여행지 기반 산책코스 추천")
+    @GetMapping("/walks")
+    public ApiResponse<List<RecommendedWalkResponse>> recommendWalks(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long tripId
+    ) {
+        return ApiResponse.success(recommendationService.recommendWalks(authUser.userId(), tripId));
     }
 }

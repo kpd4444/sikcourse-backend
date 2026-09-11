@@ -3,6 +3,7 @@ package com.sikcourse.backend.domain.place.service;
 import com.sikcourse.backend.domain.place.dto.PlaceResponse;
 import com.sikcourse.backend.domain.place.dto.PlaceSyncResponse;
 import com.sikcourse.backend.domain.place.entity.Place;
+import com.sikcourse.backend.domain.place.entity.PlaceType;
 import com.sikcourse.backend.domain.place.error.PlaceErrorCode;
 import com.sikcourse.backend.domain.place.repository.PlaceRepository;
 import com.sikcourse.backend.global.error.exception.GeneralException;
@@ -27,11 +28,23 @@ public class PlaceService {
                 .areaBasedList2(areaCode, sigunguCode, pageNo, numOfRows)
                 .body()
                 .items();
+        return sync(items, PlaceType.RESTAURANT);
+    }
+
+    public PlaceSyncResponse syncWalks(String areaCode, String sigunguCode, Integer pageNo, Integer numOfRows) {
+        List<TourRestaurantItem> items = tourApiClient
+                .walkAreaBasedList2(areaCode, sigunguCode, pageNo, numOfRows)
+                .body()
+                .items();
+        return sync(items, PlaceType.WALK);
+    }
+
+    private PlaceSyncResponse sync(List<TourRestaurantItem> items, PlaceType placeType) {
         int createdCount = 0;
         int updatedCount = 0;
 
         for (TourRestaurantItem item : items) {
-            PlaceUpsertResult result = upsert(item);
+            PlaceUpsertResult result = upsert(item, placeType);
             if (result == PlaceUpsertResult.CREATED) {
                 createdCount++;
             } else {
@@ -70,11 +83,11 @@ public class PlaceService {
         return value == null || value.isBlank();
     }
 
-    private PlaceUpsertResult upsert(TourRestaurantItem item) {
+    private PlaceUpsertResult upsert(TourRestaurantItem item, PlaceType placeType) {
         try {
-            return placeUpsertService.upsert(item);
+            return placeUpsertService.upsert(item, placeType);
         } catch (DuplicatePlaceContentIdException exception) {
-            return placeUpsertService.updateExisting(item);
+            return placeUpsertService.updateExisting(item, placeType);
         }
     }
 }

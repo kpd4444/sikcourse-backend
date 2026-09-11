@@ -13,4 +13,6 @@ public interface MenuRepository extends JpaRepository<Menu, Long> {
     List<Menu> findAllByPlaceIdInOrderByNameAsc(List<Long> placeIds);
 
     List<Menu> findAllByPlaceIdInAndMenuTypeOrderByNameAsc(List<Long> placeIds, MenuType menuType);
+
+    boolean existsByPlaceIdInAndMenuType(List<Long> placeIds, MenuType menuType);
 }

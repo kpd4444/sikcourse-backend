@@ -26,6 +26,8 @@ import java.util.Map;
 public class TourApiClient {
 
     private static final String RESTAURANT_CONTENT_TYPE_ID = "39";
+    private static final String TOURIST_ATTRACTION_CONTENT_TYPE_ID = "12";
+    private static final String NATURE_CATEGORY_CODE = "A01";
 
     private final RestClient.Builder restClientBuilder;
     private final ObjectMapper objectMapper;
@@ -41,11 +43,41 @@ public class TourApiClient {
             Integer pageNo,
             Integer numOfRows
     ) {
+        return areaBasedList2(RESTAURANT_CONTENT_TYPE_ID, areaCode, sigunguCode, null, pageNo, numOfRows);
+    }
+
+    public TourApiResponse<TourRestaurantItem> walkAreaBasedList2(
+            String areaCode,
+            String sigunguCode,
+            Integer pageNo,
+            Integer numOfRows
+    ) {
+        return areaBasedList2(
+                TOURIST_ATTRACTION_CONTENT_TYPE_ID,
+                areaCode,
+                sigunguCode,
+                NATURE_CATEGORY_CODE,
+                pageNo,
+                numOfRows
+        );
+    }
+
+    private TourApiResponse<TourRestaurantItem> areaBasedList2(
+            String contentTypeId,
+            String areaCode,
+            String sigunguCode,
+            String cat1,
+            Integer pageNo,
+            Integer numOfRows
+    ) {
         Map<String, String> params = defaultParams(pageNo, numOfRows);
-        params.put("contentTypeId", RESTAURANT_CONTENT_TYPE_ID);
+        params.put("contentTypeId", contentTypeId);
         params.put("areaCode", areaCode);
         if (sigunguCode != null && !sigunguCode.isBlank()) {
             params.put("sigunguCode", sigunguCode);
+        }
+        if (cat1 != null && !cat1.isBlank()) {
+            params.put("cat1", cat1);
         }
         params.put("arrange", "A");
 
