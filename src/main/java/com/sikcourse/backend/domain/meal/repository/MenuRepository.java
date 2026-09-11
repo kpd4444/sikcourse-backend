@@ -8,4 +8,6 @@ import java.util.List;
 public interface MenuRepository extends JpaRepository<Menu, Long> {
 
     List<Menu> findAllByPlaceIdOrderByNameAsc(Long placeId);
+
+    List<Menu> findAllByPlaceIdInOrderByNameAsc(List<Long> placeIds);
 }
