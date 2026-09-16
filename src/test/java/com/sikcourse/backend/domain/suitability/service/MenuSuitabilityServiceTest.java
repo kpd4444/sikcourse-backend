@@ -91,6 +91,60 @@ class MenuSuitabilityServiceTest {
     }
 
     @Test
+    void calculateStrengthensSodiumPenaltyForCkd() {
+        TestContext context = testContext();
+        Menu menu = menu(1L, "Seafood Soup", 300, 2500, 5);
+
+        when(context.healthProfileRepository.findByUserId(1L)).thenReturn(Optional.of(healthProfile(
+                Set.of(DiseaseType.CKD),
+                Set.of()
+        )));
+        when(context.menuRepository.findById(1L)).thenReturn(Optional.of(menu));
+        when(context.mealRecordRepository.findAllByUserIdAndEatenAtGreaterThanEqualAndEatenAtLessThanOrderByEatenAtDesc(
+                eq(1L),
+                any(),
+                any()
+        )).thenReturn(List.of());
+
+        MenuSuitabilityResponse response = context.service.calculate(1L, 1L);
+
+        assertThat(response.score()).isEqualTo(60);
+        assertThat(response.reasons()).singleElement()
+                .satisfies(reason -> {
+                    assertThat(reason.type()).isEqualTo(SuitabilityReasonType.SODIUM);
+                    assertThat(reason.penalty()).isEqualTo(40);
+                    assertThat(reason.exceededAmount()).isEqualTo(500);
+                });
+    }
+
+    @Test
+    void calculateStrengthensCaloriePenaltyForObesityAndHyperlipidemia() {
+        TestContext context = testContext();
+        Menu menu = menu(1L, "High Calorie Meal", 2500, 100, 5);
+
+        when(context.healthProfileRepository.findByUserId(1L)).thenReturn(Optional.of(healthProfile(
+                Set.of(DiseaseType.OBESITY, DiseaseType.HYPERLIPIDEMIA),
+                Set.of()
+        )));
+        when(context.menuRepository.findById(1L)).thenReturn(Optional.of(menu));
+        when(context.mealRecordRepository.findAllByUserIdAndEatenAtGreaterThanEqualAndEatenAtLessThanOrderByEatenAtDesc(
+                eq(1L),
+                any(),
+                any()
+        )).thenReturn(List.of());
+
+        MenuSuitabilityResponse response = context.service.calculate(1L, 1L);
+
+        assertThat(response.score()).isEqualTo(65);
+        assertThat(response.reasons()).singleElement()
+                .satisfies(reason -> {
+                    assertThat(reason.type()).isEqualTo(SuitabilityReasonType.CALORIE);
+                    assertThat(reason.penalty()).isEqualTo(35);
+                    assertThat(reason.exceededAmount()).isEqualTo(500);
+                });
+    }
+
+    @Test
     void calculatePlaceMenusReturnsMenusSortedByScoreDesc() {
         TestContext context = testContext();
         Menu goodMenu = menu(1L, "전복죽", 420, 780, 3);

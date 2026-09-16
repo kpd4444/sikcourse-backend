@@ -110,7 +110,7 @@ public class MenuSuitabilityService {
         int remainingSugar = healthProfile.getDailySugarGoal() - consumed.sugar();
 
         List<SuitabilityReasonResponse> reasons = List.of(
-                        calorieReason(menu, remainingCalories, healthProfile.getDietaryRestrictions()),
+                        calorieReason(menu, remainingCalories, healthProfile.getDiseases(), healthProfile.getDietaryRestrictions()),
                         sodiumReason(menu, remainingSodium, healthProfile.getDiseases(), healthProfile.getDietaryRestrictions()),
                         sugarReason(menu, remainingSugar, healthProfile.getDiseases(), healthProfile.getDietaryRestrictions())
                 ).stream()
@@ -134,6 +134,7 @@ public class MenuSuitabilityService {
     private List<SuitabilityReasonResponse> calorieReason(
             Menu menu,
             int remainingCalories,
+            Set<DiseaseType> diseases,
             Set<DietaryRestrictionType> dietaryRestrictions
     ) {
         if (menu.getCalories() <= remainingCalories) {
@@ -143,6 +144,12 @@ public class MenuSuitabilityService {
         int exceededAmount = menu.getCalories() - remainingCalories;
         int penalty = penalty(remainingCalories, exceededAmount, 15)
                 + (dietaryRestrictions.contains(DietaryRestrictionType.LOW_CALORIE) ? 10 : 0);
+        if (diseases.contains(DiseaseType.OBESITY)) {
+            penalty += 10;
+        }
+        if (diseases.contains(DiseaseType.HYPERLIPIDEMIA)) {
+            penalty += 5;
+        }
         return List.of(new SuitabilityReasonResponse(
                 SuitabilityReasonType.CALORIE,
                 "칼로리가 오늘 잔여 기준을 초과합니다.",
@@ -163,7 +170,7 @@ public class MenuSuitabilityService {
 
         int exceededAmount = menu.getSodium() - remainingSodium;
         int penalty = penalty(remainingSodium, exceededAmount, 20);
-        if (diseases.contains(DiseaseType.HYPERTENSION)) {
+        if (diseases.contains(DiseaseType.HYPERTENSION) || diseases.contains(DiseaseType.CKD)) {
             penalty += 15;
         }
         if (dietaryRestrictions.contains(DietaryRestrictionType.LOW_SODIUM)) {
