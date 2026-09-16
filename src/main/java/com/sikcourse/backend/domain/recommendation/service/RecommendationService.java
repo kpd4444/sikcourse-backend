@@ -3,6 +3,7 @@ package com.sikcourse.backend.domain.recommendation.service;
 import com.sikcourse.backend.domain.meal.entity.Menu;
 import com.sikcourse.backend.domain.meal.entity.MenuType;
 import com.sikcourse.backend.domain.meal.repository.MenuRepository;
+import com.sikcourse.backend.domain.message.service.GeminiMessageService;
 import com.sikcourse.backend.domain.place.entity.Place;
 import com.sikcourse.backend.domain.place.entity.PlaceType;
 import com.sikcourse.backend.domain.place.repository.PlaceRepository;
@@ -34,6 +35,7 @@ public class RecommendationService {
     private final PlaceRepository placeRepository;
     private final MenuRepository menuRepository;
     private final MenuSuitabilityService menuSuitabilityService;
+    private final GeminiMessageService geminiMessageService;
 
     @Transactional(readOnly = true)
     public List<RecommendedMenuResponse> recommendMenus(Long userId, Long tripId) {
@@ -113,7 +115,8 @@ public class RecommendationService {
                 place.getMapX(),
                 place.getMapY(),
                 place.getFirstImage(),
-                bestMenu
+                bestMenu,
+                geminiMessageService.placeRecommendationPoint(place)
         );
     }
 

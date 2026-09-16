@@ -3,6 +3,7 @@ package com.sikcourse.backend.domain.place.service;
 import com.sikcourse.backend.domain.place.dto.PlaceSyncResponse;
 import com.sikcourse.backend.domain.place.entity.PlaceType;
 import com.sikcourse.backend.domain.place.repository.PlaceRepository;
+import com.sikcourse.backend.domain.message.service.GeminiMessageService;
 import com.sikcourse.backend.infra.tourapi.TourApiClient;
 import com.sikcourse.backend.infra.tourapi.dto.TourApiResponse;
 import com.sikcourse.backend.infra.tourapi.dto.TourRestaurantItem;
@@ -22,7 +23,12 @@ class PlaceServiceTest {
         PlaceRepository placeRepository = mock(PlaceRepository.class);
         TourApiClient tourApiClient = mock(TourApiClient.class);
         PlaceUpsertService placeUpsertService = mock(PlaceUpsertService.class);
-        PlaceService placeService = new PlaceService(placeRepository, tourApiClient, placeUpsertService);
+        PlaceService placeService = new PlaceService(
+                placeRepository,
+                tourApiClient,
+                placeUpsertService,
+                mock(GeminiMessageService.class)
+        );
         TourRestaurantItem item = restaurantItem();
 
         when(tourApiClient.areaBasedList2("39", "4", 1, 10)).thenReturn(tourApiResponse(item));
@@ -43,7 +49,12 @@ class PlaceServiceTest {
         PlaceRepository placeRepository = mock(PlaceRepository.class);
         TourApiClient tourApiClient = mock(TourApiClient.class);
         PlaceUpsertService placeUpsertService = mock(PlaceUpsertService.class);
-        PlaceService placeService = new PlaceService(placeRepository, tourApiClient, placeUpsertService);
+        PlaceService placeService = new PlaceService(
+                placeRepository,
+                tourApiClient,
+                placeUpsertService,
+                mock(GeminiMessageService.class)
+        );
         TourRestaurantItem item = restaurantItem();
 
         when(tourApiClient.walkAreaBasedList2("39", "4", 1, 10)).thenReturn(tourApiResponse(item));

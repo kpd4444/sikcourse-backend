@@ -6,6 +6,7 @@ import com.sikcourse.backend.domain.health.entity.HealthProfile;
 import com.sikcourse.backend.domain.meal.entity.Menu;
 import com.sikcourse.backend.domain.meal.entity.MenuType;
 import com.sikcourse.backend.domain.meal.repository.MenuRepository;
+import com.sikcourse.backend.domain.message.service.GeminiMessageService;
 import com.sikcourse.backend.domain.place.entity.Place;
 import com.sikcourse.backend.domain.place.repository.PlaceRepository;
 import com.sikcourse.backend.domain.recommendation.dto.RecommendedMenuResponse;
@@ -152,14 +153,22 @@ class RecommendationServiceTest {
         PlaceRepository placeRepository = mock(PlaceRepository.class);
         MenuRepository menuRepository = mock(MenuRepository.class);
         MenuSuitabilityService menuSuitabilityService = mock(MenuSuitabilityService.class);
+        GeminiMessageService geminiMessageService = mock(GeminiMessageService.class);
         RecommendationService service = new RecommendationService(
                 tripRepository,
                 placeRepository,
                 menuRepository,
-                menuSuitabilityService
+                menuSuitabilityService,
+                geminiMessageService
         );
 
-        return new TestContext(tripRepository, placeRepository, menuRepository, menuSuitabilityService, service);
+        return new TestContext(
+                tripRepository,
+                placeRepository,
+                menuRepository,
+                menuSuitabilityService,
+                service
+        );
     }
 
     private MenuSuitabilityContext suitabilityContext() {

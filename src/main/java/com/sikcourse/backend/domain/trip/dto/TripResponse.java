@@ -13,10 +13,16 @@ public record TripResponse(
         LocalDate startDate,
         LocalDate endDate,
         BigDecimal baseMapX,
-        BigDecimal baseMapY
+        BigDecimal baseMapY,
+        String aiCourseMessage,
+        String courseFeedbackMessage
 ) {
 
     public static TripResponse from(Trip trip) {
+        return from(trip, null, null);
+    }
+
+    public static TripResponse from(Trip trip, String aiCourseMessage, String courseFeedbackMessage) {
         return new TripResponse(
                 trip.getId(),
                 trip.getTitle(),
@@ -25,7 +31,9 @@ public record TripResponse(
                 trip.getStartDate(),
                 trip.getEndDate(),
                 trip.getBaseMapX(),
-                trip.getBaseMapY()
+                trip.getBaseMapY(),
+                aiCourseMessage,
+                courseFeedbackMessage
         );
     }
 }

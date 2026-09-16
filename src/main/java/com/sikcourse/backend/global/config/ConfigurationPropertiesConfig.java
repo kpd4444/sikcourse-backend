@@ -6,7 +6,8 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @EnableConfigurationProperties({
         TourApiProperties.class,
-        JwtProperties.class
+        JwtProperties.class,
+        GeminiProperties.class
 })
 public class ConfigurationPropertiesConfig {
 }

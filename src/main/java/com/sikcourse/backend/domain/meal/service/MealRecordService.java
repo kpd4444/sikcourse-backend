@@ -10,6 +10,7 @@ import com.sikcourse.backend.domain.meal.entity.MealRecord;
 import com.sikcourse.backend.domain.meal.entity.Menu;
 import com.sikcourse.backend.domain.meal.error.MealErrorCode;
 import com.sikcourse.backend.domain.meal.repository.MealRecordRepository;
+import com.sikcourse.backend.domain.message.service.GeminiMessageService;
 import com.sikcourse.backend.global.error.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,7 @@ public class MealRecordService {
     private final HealthProfileRepository healthProfileRepository;
     private final MenuService menuService;
     private final Clock clock;
+    private final GeminiMessageService geminiMessageService;
 
     @Transactional
     public MealRecordResponse create(Long userId, CreateMealRecordRequest request) {
@@ -69,7 +71,7 @@ public class MealRecordService {
         int sodiumConsumed = records.stream().mapToInt(MealRecordResponse::sodium).sum();
         int sugarConsumed = records.stream().mapToInt(MealRecordResponse::sugar).sum();
 
-        return new DailyNutritionSummaryResponse(
+        DailyNutritionSummaryResponse summary = new DailyNutritionSummaryResponse(
                 healthProfile.getDailyCalorieGoal(),
                 calorieConsumed,
                 healthProfile.getDailyCalorieGoal() - calorieConsumed,
@@ -79,6 +81,18 @@ public class MealRecordService {
                 healthProfile.getDailySugarGoal(),
                 sugarConsumed,
                 healthProfile.getDailySugarGoal() - sugarConsumed
+        );
+        return new DailyNutritionSummaryResponse(
+                summary.calorieGoal(),
+                summary.calorieConsumed(),
+                summary.calorieRemaining(),
+                summary.sodiumGoal(),
+                summary.sodiumConsumed(),
+                summary.sodiumRemaining(),
+                summary.sugarGoal(),
+                summary.sugarConsumed(),
+                summary.sugarRemaining(),
+                geminiMessageService.dailySummaryMessage(records, summary)
         );
     }
 

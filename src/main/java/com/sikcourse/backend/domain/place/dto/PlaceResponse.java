@@ -22,10 +22,15 @@ public record PlaceResponse(
         String firstImage2,
         String cat1,
         String cat2,
-        String cat3
+        String cat3,
+        String aiRecommendationPoint
 ) {
 
     public static PlaceResponse from(Place place) {
+        return from(place, null);
+    }
+
+    public static PlaceResponse from(Place place, String aiRecommendationPoint) {
         return new PlaceResponse(
                 place.getId(),
                 place.getContentId(),
@@ -43,7 +48,8 @@ public record PlaceResponse(
                 place.getFirstImage2(),
                 place.getCat1(),
                 place.getCat2(),
-                place.getCat3()
+                place.getCat3(),
+                aiRecommendationPoint
         );
     }
 }

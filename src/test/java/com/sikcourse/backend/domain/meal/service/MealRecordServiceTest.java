@@ -12,6 +12,7 @@ import com.sikcourse.backend.domain.meal.entity.MealType;
 import com.sikcourse.backend.domain.meal.entity.Menu;
 import com.sikcourse.backend.domain.meal.error.MealErrorCode;
 import com.sikcourse.backend.domain.meal.repository.MealRecordRepository;
+import com.sikcourse.backend.domain.message.service.GeminiMessageService;
 import com.sikcourse.backend.global.error.exception.GeneralException;
 import org.junit.jupiter.api.Test;
 
@@ -47,7 +48,8 @@ class MealRecordServiceTest {
                 mealRecordRepository,
                 healthProfileRepository,
                 menuService,
-                FIXED_CLOCK
+                FIXED_CLOCK,
+                mock(GeminiMessageService.class)
         );
 
         when(healthProfileRepository.findByUserId(1L)).thenReturn(Optional.of(healthProfile()));
@@ -84,7 +86,8 @@ class MealRecordServiceTest {
                 mealRecordRepository,
                 healthProfileRepository,
                 menuService,
-                FIXED_CLOCK
+                FIXED_CLOCK,
+                mock(GeminiMessageService.class)
         );
 
         when(healthProfileRepository.findByUserId(1L)).thenReturn(Optional.empty());
@@ -103,7 +106,8 @@ class MealRecordServiceTest {
                 mealRecordRepository,
                 healthProfileRepository,
                 menuService,
-                FIXED_CLOCK
+                FIXED_CLOCK,
+                mock(GeminiMessageService.class)
         );
         CreateMealRecordRequest request = new CreateMealRecordRequest(
                 1L,

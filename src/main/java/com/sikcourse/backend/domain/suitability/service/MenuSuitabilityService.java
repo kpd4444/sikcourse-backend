@@ -10,6 +10,7 @@ import com.sikcourse.backend.domain.meal.entity.Menu;
 import com.sikcourse.backend.domain.meal.error.MealErrorCode;
 import com.sikcourse.backend.domain.meal.repository.MealRecordRepository;
 import com.sikcourse.backend.domain.meal.repository.MenuRepository;
+import com.sikcourse.backend.domain.message.service.GeminiMessageService;
 import com.sikcourse.backend.domain.place.error.PlaceErrorCode;
 import com.sikcourse.backend.domain.place.repository.PlaceRepository;
 import com.sikcourse.backend.domain.suitability.dto.MenuSuitabilityResponse;
@@ -42,13 +43,22 @@ public class MenuSuitabilityService {
     private final MealRecordRepository mealRecordRepository;
     private final PlaceRepository placeRepository;
     private final Clock clock;
+    private final GeminiMessageService geminiMessageService;
 
     @Transactional(readOnly = true)
     public MenuSuitabilityResponse calculate(Long userId, Long menuId) {
         MenuSuitabilityContext context = createContext(userId);
         Menu menu = getMenu(menuId);
+        MenuSuitabilityResponse response = calculate(context, menu);
 
-        return calculate(context, menu);
+        return new MenuSuitabilityResponse(
+                response.menuId(),
+                response.menuName(),
+                response.score(),
+                response.level(),
+                response.reasons(),
+                geminiMessageService.menuRecommendationMessage(response)
+        );
     }
 
     @Transactional(readOnly = true)
@@ -100,7 +110,7 @@ public class MenuSuitabilityService {
         int remainingSugar = healthProfile.getDailySugarGoal() - consumed.sugar();
 
         List<SuitabilityReasonResponse> reasons = List.of(
-                        calorieReason(menu, remainingCalories, healthProfile.getDietaryRestrictions()),
+                        calorieReason(menu, remainingCalories, healthProfile.getDiseases(), healthProfile.getDietaryRestrictions()),
                         sodiumReason(menu, remainingSodium, healthProfile.getDiseases(), healthProfile.getDietaryRestrictions()),
                         sugarReason(menu, remainingSugar, healthProfile.getDiseases(), healthProfile.getDietaryRestrictions())
                 ).stream()
@@ -124,6 +134,7 @@ public class MenuSuitabilityService {
     private List<SuitabilityReasonResponse> calorieReason(
             Menu menu,
             int remainingCalories,
+            Set<DiseaseType> diseases,
             Set<DietaryRestrictionType> dietaryRestrictions
     ) {
         if (menu.getCalories() <= remainingCalories) {
@@ -133,6 +144,12 @@ public class MenuSuitabilityService {
         int exceededAmount = menu.getCalories() - remainingCalories;
         int penalty = penalty(remainingCalories, exceededAmount, 15)
                 + (dietaryRestrictions.contains(DietaryRestrictionType.LOW_CALORIE) ? 10 : 0);
+        if (diseases.contains(DiseaseType.OBESITY)) {
+            penalty += 10;
+        }
+        if (diseases.contains(DiseaseType.HYPERLIPIDEMIA)) {
+            penalty += 5;
+        }
         return List.of(new SuitabilityReasonResponse(
                 SuitabilityReasonType.CALORIE,
                 "칼로리가 오늘 잔여 기준을 초과합니다.",
@@ -153,7 +170,7 @@ public class MenuSuitabilityService {
 
         int exceededAmount = menu.getSodium() - remainingSodium;
         int penalty = penalty(remainingSodium, exceededAmount, 20);
-        if (diseases.contains(DiseaseType.HYPERTENSION)) {
+        if (diseases.contains(DiseaseType.HYPERTENSION) || diseases.contains(DiseaseType.CKD)) {
             penalty += 15;
         }
         if (dietaryRestrictions.contains(DietaryRestrictionType.LOW_SODIUM)) {

@@ -4,6 +4,7 @@ public record CompleteMealResponse(
         MealRecordResponse mealRecord,
         DailyNutritionSummaryResponse nutritionSummary,
         boolean dessertAvailable,
-        boolean walkAvailable
+        boolean walkAvailable,
+        String popupMessage
 ) {
 }

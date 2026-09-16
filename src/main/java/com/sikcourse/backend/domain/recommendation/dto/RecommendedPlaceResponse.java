@@ -9,6 +9,7 @@ public record RecommendedPlaceResponse(
         BigDecimal mapX,
         BigDecimal mapY,
         String firstImage,
-        RecommendedMenuResponse bestMenu
+        RecommendedMenuResponse bestMenu,
+        String aiCourseMessage
 ) {
 }

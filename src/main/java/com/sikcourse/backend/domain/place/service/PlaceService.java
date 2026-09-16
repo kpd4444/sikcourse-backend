@@ -6,6 +6,7 @@ import com.sikcourse.backend.domain.place.entity.Place;
 import com.sikcourse.backend.domain.place.entity.PlaceType;
 import com.sikcourse.backend.domain.place.error.PlaceErrorCode;
 import com.sikcourse.backend.domain.place.repository.PlaceRepository;
+import com.sikcourse.backend.domain.message.service.GeminiMessageService;
 import com.sikcourse.backend.global.error.exception.GeneralException;
 import com.sikcourse.backend.infra.tourapi.TourApiClient;
 import com.sikcourse.backend.infra.tourapi.dto.TourRestaurantItem;
@@ -22,6 +23,7 @@ public class PlaceService {
     private final PlaceRepository placeRepository;
     private final TourApiClient tourApiClient;
     private final PlaceUpsertService placeUpsertService;
+    private final GeminiMessageService geminiMessageService;
 
     public PlaceSyncResponse syncRestaurants(String areaCode, String sigunguCode, Integer pageNo, Integer numOfRows) {
         List<TourRestaurantItem> items = tourApiClient
@@ -66,7 +68,7 @@ public class PlaceService {
     public PlaceResponse getPlace(Long placeId) {
         Place place = placeRepository.findById(placeId)
                 .orElseThrow(() -> new GeneralException(PlaceErrorCode.PLACE_NOT_FOUND));
-        return PlaceResponse.from(place);
+        return PlaceResponse.from(place, geminiMessageService.placeRecommendationPoint(place));
     }
 
     private List<Place> findPlaces(String areaCode, String sigunguCode) {

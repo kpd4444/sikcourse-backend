@@ -1,5 +1,6 @@
 package com.sikcourse.backend.domain.trip.service;
 
+import com.sikcourse.backend.domain.message.service.GeminiMessageService;
 import com.sikcourse.backend.domain.trip.dto.CreateTripRequest;
 import com.sikcourse.backend.domain.trip.dto.TripResponse;
 import com.sikcourse.backend.domain.trip.dto.UpdateTripRequest;
@@ -19,6 +20,7 @@ import java.util.List;
 public class TripService {
 
     private final TripRepository tripRepository;
+    private final GeminiMessageService geminiMessageService;
 
     @Transactional
     public TripResponse create(Long userId, CreateTripRequest request) {
@@ -47,7 +49,12 @@ public class TripService {
 
     @Transactional(readOnly = true)
     public TripResponse getTrip(Long userId, Long tripId) {
-        return TripResponse.from(getByIdAndUserId(tripId, userId));
+        Trip trip = getByIdAndUserId(tripId, userId);
+        return TripResponse.from(
+                trip,
+                geminiMessageService.tripCourseMessage(trip),
+                geminiMessageService.tripCourseFeedbackMessage(trip)
+        );
     }
 
     @Transactional
