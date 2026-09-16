@@ -6,7 +6,11 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
 
 tour-api:
-  service-key: 본인_TourAPI_디코딩_인증키
+  service-key: 본인_TourAPI_서비스키
 
 jwt:
   secret: 로컬에서만_사용할_긴_랜덤_문자열
+
+gemini:
+  api-key: 본인_Gemini_API_Key
+  model: gemini-1.5-flash

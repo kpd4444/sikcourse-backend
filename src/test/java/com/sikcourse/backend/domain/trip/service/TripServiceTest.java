@@ -1,5 +1,6 @@
 package com.sikcourse.backend.domain.trip.service;
 
+import com.sikcourse.backend.domain.message.service.GeminiMessageService;
 import com.sikcourse.backend.domain.trip.dto.CreateTripRequest;
 import com.sikcourse.backend.domain.trip.dto.UpdateTripRequest;
 import com.sikcourse.backend.domain.trip.entity.Trip;
@@ -22,7 +23,10 @@ class TripServiceTest {
 
     @Test
     void createRejectsStartDateAfterEndDate() {
-        TripService tripService = new TripService(mock(TripRepository.class));
+        TripService tripService = new TripService(
+                mock(TripRepository.class),
+                mock(GeminiMessageService.class)
+        );
         CreateTripRequest request = new CreateTripRequest(
                 "Jeju Trip",
                 "39",
@@ -41,7 +45,7 @@ class TripServiceTest {
     @Test
     void updateValidatesDateRangeWithExistingTripDates() {
         TripRepository tripRepository = mock(TripRepository.class);
-        TripService tripService = new TripService(tripRepository);
+        TripService tripService = new TripService(tripRepository, mock(GeminiMessageService.class));
         Trip trip = trip();
 
         when(tripRepository.findByIdAndUserId(1L, 1L)).thenReturn(Optional.of(trip));
@@ -64,7 +68,7 @@ class TripServiceTest {
     @Test
     void getTripUsesUserIdOwnershipCondition() {
         TripRepository tripRepository = mock(TripRepository.class);
-        TripService tripService = new TripService(tripRepository);
+        TripService tripService = new TripService(tripRepository, mock(GeminiMessageService.class));
 
         when(tripRepository.findByIdAndUserId(1L, 2L)).thenReturn(Optional.empty());
 
@@ -76,7 +80,7 @@ class TripServiceTest {
     @Test
     void createReturnsSavedTrip() {
         TripRepository tripRepository = mock(TripRepository.class);
-        TripService tripService = new TripService(tripRepository);
+        TripService tripService = new TripService(tripRepository, mock(GeminiMessageService.class));
 
         when(tripRepository.save(any(Trip.class))).thenAnswer(invocation -> invocation.getArgument(0));
 

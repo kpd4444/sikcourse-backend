@@ -10,6 +10,7 @@ import com.sikcourse.backend.domain.meal.entity.Menu;
 import com.sikcourse.backend.domain.meal.error.MealErrorCode;
 import com.sikcourse.backend.domain.meal.repository.MealRecordRepository;
 import com.sikcourse.backend.domain.meal.repository.MenuRepository;
+import com.sikcourse.backend.domain.message.service.GeminiMessageService;
 import com.sikcourse.backend.domain.place.error.PlaceErrorCode;
 import com.sikcourse.backend.domain.place.repository.PlaceRepository;
 import com.sikcourse.backend.domain.suitability.dto.MenuSuitabilityResponse;
@@ -42,13 +43,22 @@ public class MenuSuitabilityService {
     private final MealRecordRepository mealRecordRepository;
     private final PlaceRepository placeRepository;
     private final Clock clock;
+    private final GeminiMessageService geminiMessageService;
 
     @Transactional(readOnly = true)
     public MenuSuitabilityResponse calculate(Long userId, Long menuId) {
         MenuSuitabilityContext context = createContext(userId);
         Menu menu = getMenu(menuId);
+        MenuSuitabilityResponse response = calculate(context, menu);
 
-        return calculate(context, menu);
+        return new MenuSuitabilityResponse(
+                response.menuId(),
+                response.menuName(),
+                response.score(),
+                response.level(),
+                response.reasons(),
+                geminiMessageService.menuRecommendationMessage(response)
+        );
     }
 
     @Transactional(readOnly = true)

@@ -9,6 +9,17 @@ public record MenuSuitabilityResponse(
         String menuName,
         Integer score,
         SuitabilityLevel level,
-        List<SuitabilityReasonResponse> reasons
+        List<SuitabilityReasonResponse> reasons,
+        String recommendationMessage
 ) {
+
+    public MenuSuitabilityResponse(
+            Long menuId,
+            String menuName,
+            Integer score,
+            SuitabilityLevel level,
+            List<SuitabilityReasonResponse> reasons
+    ) {
+        this(menuId, menuName, score, level, reasons, null);
+    }
 }

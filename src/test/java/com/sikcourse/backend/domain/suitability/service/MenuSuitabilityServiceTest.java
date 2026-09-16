@@ -11,6 +11,7 @@ import com.sikcourse.backend.domain.meal.entity.Menu;
 import com.sikcourse.backend.domain.meal.error.MealErrorCode;
 import com.sikcourse.backend.domain.meal.repository.MealRecordRepository;
 import com.sikcourse.backend.domain.meal.repository.MenuRepository;
+import com.sikcourse.backend.domain.message.service.GeminiMessageService;
 import com.sikcourse.backend.domain.place.error.PlaceErrorCode;
 import com.sikcourse.backend.domain.place.repository.PlaceRepository;
 import com.sikcourse.backend.domain.suitability.dto.MenuSuitabilityResponse;
@@ -162,7 +163,8 @@ class MenuSuitabilityServiceTest {
                 menuRepository,
                 mealRecordRepository,
                 placeRepository,
-                FIXED_CLOCK
+                FIXED_CLOCK,
+                mock(GeminiMessageService.class)
         );
 
         return new TestContext(

@@ -6,6 +6,7 @@ import com.sikcourse.backend.domain.meal.dto.DailyNutritionSummaryResponse;
 import com.sikcourse.backend.domain.meal.dto.MealRecordResponse;
 import com.sikcourse.backend.domain.meal.entity.MenuType;
 import com.sikcourse.backend.domain.meal.repository.MenuRepository;
+import com.sikcourse.backend.domain.message.service.GeminiMessageService;
 import com.sikcourse.backend.domain.place.entity.Place;
 import com.sikcourse.backend.domain.place.entity.PlaceType;
 import com.sikcourse.backend.domain.place.repository.PlaceRepository;
@@ -27,6 +28,7 @@ public class MealCompletionService {
     private final TripRepository tripRepository;
     private final PlaceRepository placeRepository;
     private final MenuRepository menuRepository;
+    private final GeminiMessageService geminiMessageService;
 
     @Transactional
     public CompleteMealResponse complete(Long userId, CompleteMealRequest request) {
@@ -47,7 +49,13 @@ public class MealCompletionService {
                 mealRecord,
                 nutritionSummary,
                 dessertAvailable,
-                walkAvailable
+                walkAvailable,
+                geminiMessageService.mealCompletionPopupMessage(
+                        mealRecord,
+                        nutritionSummary,
+                        dessertAvailable,
+                        walkAvailable
+                )
         );
     }
 

@@ -35,3 +35,10 @@ tour-api:
 jwt:
   secret: ${JWT_SECRET}
   access-token-expiration-millis: ${JWT_ACCESS_TOKEN_EXPIRATION_MILLIS:3600000}
+
+gemini:
+  api-key: ${GEMINI_API_KEY:}
+  model: ${GEMINI_MODEL:gemini-1.5-flash}
+  base-url: ${GEMINI_BASE_URL:https://generativelanguage.googleapis.com}
+  connect-timeout-millis: ${GEMINI_CONNECT_TIMEOUT_MILLIS:3000}
+  read-timeout-millis: ${GEMINI_READ_TIMEOUT_MILLIS:10000}
