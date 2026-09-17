@@ -42,6 +42,7 @@ application-secret.*
 
 ### Local Config ###
 .env.*
+!.env.example
 
 ### Secret / Local YAML ###
 src/main/resources/application-local.*
