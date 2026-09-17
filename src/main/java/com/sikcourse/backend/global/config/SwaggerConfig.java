@@ -6,6 +6,7 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -17,10 +18,10 @@ public class SwaggerConfig {
     private static final String SECURITY_SCHEME_NAME = "JWT";
 
     @Bean
-    public OpenAPI openAPI() {
+    public OpenAPI openAPI(@Value("${swagger.server-url:http://localhost:8080}") String serverUrl) {
         return new OpenAPI()
                 .info(apiInfo())
-                .servers(serverList())
+                .servers(serverList(serverUrl))
                 .addSecurityItem(new SecurityRequirement().addList(SECURITY_SCHEME_NAME))
                 .components(new Components()
                         .addSecuritySchemes(SECURITY_SCHEME_NAME, jwtSecurityScheme()));
@@ -33,9 +34,9 @@ public class SwaggerConfig {
                 .version("1.0.0");
     }
 
-    private List<Server> serverList() {
+    private List<Server> serverList(String serverUrl) {
         return List.of(
-                new Server().url("http://localhost:8080").description("Local")
+                new Server().url(serverUrl).description("API Server")
         );
     }
 

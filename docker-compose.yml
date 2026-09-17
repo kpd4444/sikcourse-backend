@@ -44,6 +44,7 @@ services:
       GEMINI_BASE_URL: ${GEMINI_BASE_URL}
       GEMINI_CONNECT_TIMEOUT_MILLIS: ${GEMINI_CONNECT_TIMEOUT_MILLIS}
       GEMINI_READ_TIMEOUT_MILLIS: ${GEMINI_READ_TIMEOUT_MILLIS}
+      SWAGGER_SERVER_URL: ${SWAGGER_SERVER_URL}
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/health >/dev/null || exit 1"]
       interval: 15s
