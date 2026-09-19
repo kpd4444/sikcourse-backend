@@ -67,24 +67,6 @@ public class HealthProfile extends BaseTimeEntity {
     @Column(name = "disease_type", nullable = false, length = 30)
     private Set<DiseaseType> diseases = new HashSet<>();
 
-    @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(
-            name = "health_profile_allergies",
-            joinColumns = @JoinColumn(name = "health_profile_id")
-    )
-    @Enumerated(EnumType.STRING)
-    @Column(name = "allergy_type", nullable = false, length = 30)
-    private Set<AllergyType> allergies = new HashSet<>();
-
-    @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(
-            name = "health_profile_dietary_restrictions",
-            joinColumns = @JoinColumn(name = "health_profile_id")
-    )
-    @Enumerated(EnumType.STRING)
-    @Column(name = "restriction_type", nullable = false, length = 30)
-    private Set<DietaryRestrictionType> dietaryRestrictions = new HashSet<>();
-
     @Column(name = "daily_calorie_goal", nullable = false)
     private Integer dailyCalorieGoal;
 
@@ -103,8 +85,6 @@ public class HealthProfile extends BaseTimeEntity {
             Integer weight,
             ActivityLevel activityLevel,
             Set<DiseaseType> diseases,
-            Set<AllergyType> allergies,
-            Set<DietaryRestrictionType> dietaryRestrictions,
             Integer dailyCalorieGoal,
             Integer dailySodiumGoal,
             Integer dailySugarGoal
@@ -116,8 +96,6 @@ public class HealthProfile extends BaseTimeEntity {
         this.weight = weight;
         this.activityLevel = activityLevel;
         this.diseases = new HashSet<>(diseases);
-        this.allergies = new HashSet<>(allergies);
-        this.dietaryRestrictions = new HashSet<>(dietaryRestrictions);
         this.dailyCalorieGoal = dailyCalorieGoal;
         this.dailySodiumGoal = dailySodiumGoal;
         this.dailySugarGoal = dailySugarGoal;
@@ -130,8 +108,6 @@ public class HealthProfile extends BaseTimeEntity {
             Integer weight,
             ActivityLevel activityLevel,
             Set<DiseaseType> diseases,
-            Set<AllergyType> allergies,
-            Set<DietaryRestrictionType> dietaryRestrictions,
             Integer dailyCalorieGoal,
             Integer dailySodiumGoal,
             Integer dailySugarGoal
@@ -153,12 +129,6 @@ public class HealthProfile extends BaseTimeEntity {
         }
         if (diseases != null) {
             this.diseases = new HashSet<>(diseases);
-        }
-        if (allergies != null) {
-            this.allergies = new HashSet<>(allergies);
-        }
-        if (dietaryRestrictions != null) {
-            this.dietaryRestrictions = new HashSet<>(dietaryRestrictions);
         }
         if (dailyCalorieGoal != null) {
             this.dailyCalorieGoal = dailyCalorieGoal;

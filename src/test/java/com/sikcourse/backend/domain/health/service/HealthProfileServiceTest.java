@@ -2,8 +2,6 @@ package com.sikcourse.backend.domain.health.service;
 
 import com.sikcourse.backend.domain.health.dto.CreateHealthProfileRequest;
 import com.sikcourse.backend.domain.health.entity.ActivityLevel;
-import com.sikcourse.backend.domain.health.entity.AllergyType;
-import com.sikcourse.backend.domain.health.entity.DietaryRestrictionType;
 import com.sikcourse.backend.domain.health.entity.DiseaseType;
 import com.sikcourse.backend.domain.health.entity.Gender;
 import com.sikcourse.backend.domain.health.entity.HealthProfile;
@@ -71,8 +69,6 @@ class HealthProfileServiceTest {
                 70,
                 ActivityLevel.MODERATE,
                 Set.of(DiseaseType.DIABETES),
-                Set.of(AllergyType.NUTS),
-                Set.of(DietaryRestrictionType.LOW_SUGAR),
                 2000,
                 2000,
                 50

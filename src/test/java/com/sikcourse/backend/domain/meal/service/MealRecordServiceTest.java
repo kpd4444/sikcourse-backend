@@ -129,8 +129,6 @@ class MealRecordServiceTest {
                 .weight(70)
                 .activityLevel(ActivityLevel.MODERATE)
                 .diseases(Set.of())
-                .allergies(Set.of())
-                .dietaryRestrictions(Set.of())
                 .dailyCalorieGoal(2000)
                 .dailySodiumGoal(2000)
                 .dailySugarGoal(50)
