@@ -1,7 +1,6 @@
 package com.sikcourse.backend.domain.suitability.service;
 
 import com.sikcourse.backend.domain.health.entity.ActivityLevel;
-import com.sikcourse.backend.domain.health.entity.DietaryRestrictionType;
 import com.sikcourse.backend.domain.health.entity.DiseaseType;
 import com.sikcourse.backend.domain.health.entity.Gender;
 import com.sikcourse.backend.domain.health.entity.HealthProfile;
@@ -47,7 +46,7 @@ class MenuSuitabilityServiceTest {
         TestContext context = testContext();
         Menu menu = menu(1L, "전복죽", 420, 780, 3);
 
-        when(context.healthProfileRepository.findByUserId(1L)).thenReturn(Optional.of(healthProfile(Set.of(), Set.of())));
+        when(context.healthProfileRepository.findByUserId(1L)).thenReturn(Optional.of(healthProfile(Set.of())));
         when(context.menuRepository.findById(1L)).thenReturn(Optional.of(menu));
         when(context.mealRecordRepository.findAllByUserIdAndEatenAtGreaterThanEqualAndEatenAtLessThanOrderByEatenAtDesc(
                 eq(1L),
@@ -63,13 +62,12 @@ class MenuSuitabilityServiceTest {
     }
 
     @Test
-    void calculateStrengthensSugarPenaltyForDiabetesAndLowSugarRestriction() {
+    void calculateAppliesSugarPenaltyForDiabetes() {
         TestContext context = testContext();
         Menu menu = menu(1L, "감귤 디저트", 300, 100, 80);
 
         when(context.healthProfileRepository.findByUserId(1L)).thenReturn(Optional.of(healthProfile(
-                Set.of(DiseaseType.DIABETES),
-                Set.of(DietaryRestrictionType.LOW_SUGAR)
+                Set.of(DiseaseType.DIABETES)
         )));
         when(context.menuRepository.findById(1L)).thenReturn(Optional.of(menu));
         when(context.mealRecordRepository.findAllByUserIdAndEatenAtGreaterThanEqualAndEatenAtLessThanOrderByEatenAtDesc(
@@ -80,12 +78,12 @@ class MenuSuitabilityServiceTest {
 
         MenuSuitabilityResponse response = context.service.calculate(1L, 1L);
 
-        assertThat(response.score()).isEqualTo(43);
-        assertThat(response.level()).isEqualTo(SuitabilityLevel.DANGER);
+        assertThat(response.score()).isEqualTo(53);
+        assertThat(response.level()).isEqualTo(SuitabilityLevel.CAUTION);
         assertThat(response.reasons()).singleElement()
                 .satisfies(reason -> {
                     assertThat(reason.type()).isEqualTo(SuitabilityReasonType.SUGAR);
-                    assertThat(reason.penalty()).isEqualTo(57);
+                    assertThat(reason.penalty()).isEqualTo(47);
                     assertThat(reason.exceededAmount()).isEqualTo(30);
                 });
     }
@@ -96,8 +94,7 @@ class MenuSuitabilityServiceTest {
         Menu menu = menu(1L, "Seafood Soup", 300, 2500, 5);
 
         when(context.healthProfileRepository.findByUserId(1L)).thenReturn(Optional.of(healthProfile(
-                Set.of(DiseaseType.CKD),
-                Set.of()
+                Set.of(DiseaseType.CKD)
         )));
         when(context.menuRepository.findById(1L)).thenReturn(Optional.of(menu));
         when(context.mealRecordRepository.findAllByUserIdAndEatenAtGreaterThanEqualAndEatenAtLessThanOrderByEatenAtDesc(
@@ -123,8 +120,7 @@ class MenuSuitabilityServiceTest {
         Menu menu = menu(1L, "High Calorie Meal", 2500, 100, 5);
 
         when(context.healthProfileRepository.findByUserId(1L)).thenReturn(Optional.of(healthProfile(
-                Set.of(DiseaseType.OBESITY, DiseaseType.HYPERLIPIDEMIA),
-                Set.of()
+                Set.of(DiseaseType.OBESITY, DiseaseType.HYPERLIPIDEMIA)
         )));
         when(context.menuRepository.findById(1L)).thenReturn(Optional.of(menu));
         when(context.mealRecordRepository.findAllByUserIdAndEatenAtGreaterThanEqualAndEatenAtLessThanOrderByEatenAtDesc(
@@ -152,8 +148,7 @@ class MenuSuitabilityServiceTest {
 
         when(context.placeRepository.existsById(1L)).thenReturn(true);
         when(context.healthProfileRepository.findByUserId(1L)).thenReturn(Optional.of(healthProfile(
-                Set.of(DiseaseType.HYPERTENSION),
-                Set.of(DietaryRestrictionType.LOW_SODIUM)
+                Set.of(DiseaseType.HYPERTENSION)
         )));
         when(context.mealRecordRepository.findAllByUserIdAndEatenAtGreaterThanEqualAndEatenAtLessThanOrderByEatenAtDesc(
                 eq(1L),
@@ -183,7 +178,7 @@ class MenuSuitabilityServiceTest {
     void calculateRequiresMenu() {
         TestContext context = testContext();
 
-        when(context.healthProfileRepository.findByUserId(1L)).thenReturn(Optional.of(healthProfile(Set.of(), Set.of())));
+        when(context.healthProfileRepository.findByUserId(1L)).thenReturn(Optional.of(healthProfile(Set.of())));
         when(context.mealRecordRepository.findAllByUserIdAndEatenAtGreaterThanEqualAndEatenAtLessThanOrderByEatenAtDesc(
                 eq(1L),
                 any(),
@@ -230,10 +225,7 @@ class MenuSuitabilityServiceTest {
         );
     }
 
-    private HealthProfile healthProfile(
-            Set<DiseaseType> diseases,
-            Set<DietaryRestrictionType> dietaryRestrictions
-    ) {
+    private HealthProfile healthProfile(Set<DiseaseType> diseases) {
         return HealthProfile.builder()
                 .userId(1L)
                 .birthDate(java.time.LocalDate.of(1998, 5, 20))
@@ -242,8 +234,6 @@ class MenuSuitabilityServiceTest {
                 .weight(70)
                 .activityLevel(ActivityLevel.MODERATE)
                 .diseases(diseases)
-                .allergies(Set.of())
-                .dietaryRestrictions(dietaryRestrictions)
                 .dailyCalorieGoal(2000)
                 .dailySodiumGoal(2000)
                 .dailySugarGoal(50)

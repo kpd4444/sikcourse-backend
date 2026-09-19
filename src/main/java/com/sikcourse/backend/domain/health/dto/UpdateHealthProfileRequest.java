@@ -1,8 +1,6 @@
 package com.sikcourse.backend.domain.health.dto;
 
 import com.sikcourse.backend.domain.health.entity.ActivityLevel;
-import com.sikcourse.backend.domain.health.entity.AllergyType;
-import com.sikcourse.backend.domain.health.entity.DietaryRestrictionType;
 import com.sikcourse.backend.domain.health.entity.DiseaseType;
 import com.sikcourse.backend.domain.health.entity.Gender;
 import jakarta.validation.constraints.Min;
@@ -22,8 +20,6 @@ public record UpdateHealthProfileRequest(
 
         ActivityLevel activityLevel,
         Set<DiseaseType> diseases,
-        Set<AllergyType> allergies,
-        Set<DietaryRestrictionType> dietaryRestrictions,
 
         @Min(value = 1, message = "일일 목표 칼로리는 1 이상이어야 합니다.")
         Integer dailyCalorieGoal,

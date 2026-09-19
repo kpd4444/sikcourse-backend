@@ -33,8 +33,6 @@ public class HealthProfileService {
                 .weight(request.weight())
                 .activityLevel(request.activityLevel())
                 .diseases(request.diseases())
-                .allergies(request.allergies())
-                .dietaryRestrictions(request.dietaryRestrictions())
                 .dailyCalorieGoal(request.dailyCalorieGoal())
                 .dailySodiumGoal(request.dailySodiumGoal())
                 .dailySugarGoal(request.dailySugarGoal())
@@ -66,8 +64,6 @@ public class HealthProfileService {
                 request.weight(),
                 request.activityLevel(),
                 request.diseases(),
-                request.allergies(),
-                request.dietaryRestrictions(),
                 request.dailyCalorieGoal(),
                 request.dailySodiumGoal(),
                 request.dailySugarGoal()

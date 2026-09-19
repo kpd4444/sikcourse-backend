@@ -1,6 +1,5 @@
 package com.sikcourse.backend.domain.suitability.service;
 
-import com.sikcourse.backend.domain.health.entity.DietaryRestrictionType;
 import com.sikcourse.backend.domain.health.entity.DiseaseType;
 import com.sikcourse.backend.domain.health.entity.HealthProfile;
 import com.sikcourse.backend.domain.health.error.HealthErrorCode;
@@ -110,9 +109,9 @@ public class MenuSuitabilityService {
         int remainingSugar = healthProfile.getDailySugarGoal() - consumed.sugar();
 
         List<SuitabilityReasonResponse> reasons = List.of(
-                        calorieReason(menu, remainingCalories, healthProfile.getDiseases(), healthProfile.getDietaryRestrictions()),
-                        sodiumReason(menu, remainingSodium, healthProfile.getDiseases(), healthProfile.getDietaryRestrictions()),
-                        sugarReason(menu, remainingSugar, healthProfile.getDiseases(), healthProfile.getDietaryRestrictions())
+                        calorieReason(menu, remainingCalories, healthProfile.getDiseases()),
+                        sodiumReason(menu, remainingSodium, healthProfile.getDiseases()),
+                        sugarReason(menu, remainingSugar, healthProfile.getDiseases())
                 ).stream()
                 .flatMap(List::stream)
                 .toList();
@@ -134,16 +133,14 @@ public class MenuSuitabilityService {
     private List<SuitabilityReasonResponse> calorieReason(
             Menu menu,
             int remainingCalories,
-            Set<DiseaseType> diseases,
-            Set<DietaryRestrictionType> dietaryRestrictions
+            Set<DiseaseType> diseases
     ) {
         if (menu.getCalories() <= remainingCalories) {
             return List.of();
         }
 
         int exceededAmount = menu.getCalories() - remainingCalories;
-        int penalty = penalty(remainingCalories, exceededAmount, 15)
-                + (dietaryRestrictions.contains(DietaryRestrictionType.LOW_CALORIE) ? 10 : 0);
+        int penalty = penalty(remainingCalories, exceededAmount, 15);
         if (diseases.contains(DiseaseType.OBESITY)) {
             penalty += 10;
         }
@@ -161,8 +158,7 @@ public class MenuSuitabilityService {
     private List<SuitabilityReasonResponse> sodiumReason(
             Menu menu,
             int remainingSodium,
-            Set<DiseaseType> diseases,
-            Set<DietaryRestrictionType> dietaryRestrictions
+            Set<DiseaseType> diseases
     ) {
         if (menu.getSodium() <= remainingSodium) {
             return List.of();
@@ -172,9 +168,6 @@ public class MenuSuitabilityService {
         int penalty = penalty(remainingSodium, exceededAmount, 20);
         if (diseases.contains(DiseaseType.HYPERTENSION) || diseases.contains(DiseaseType.CKD)) {
             penalty += 15;
-        }
-        if (dietaryRestrictions.contains(DietaryRestrictionType.LOW_SODIUM)) {
-            penalty += 10;
         }
 
         return List.of(new SuitabilityReasonResponse(
@@ -188,8 +181,7 @@ public class MenuSuitabilityService {
     private List<SuitabilityReasonResponse> sugarReason(
             Menu menu,
             int remainingSugar,
-            Set<DiseaseType> diseases,
-            Set<DietaryRestrictionType> dietaryRestrictions
+            Set<DiseaseType> diseases
     ) {
         if (menu.getSugar() <= remainingSugar) {
             return List.of();
@@ -199,9 +191,6 @@ public class MenuSuitabilityService {
         int penalty = penalty(remainingSugar, exceededAmount, 20);
         if (diseases.contains(DiseaseType.DIABETES)) {
             penalty += 15;
-        }
-        if (dietaryRestrictions.contains(DietaryRestrictionType.LOW_SUGAR)) {
-            penalty += 10;
         }
 
         return List.of(new SuitabilityReasonResponse(
