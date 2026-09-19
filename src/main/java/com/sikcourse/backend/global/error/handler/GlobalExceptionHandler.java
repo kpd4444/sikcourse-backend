@@ -3,23 +3,19 @@ package com.sikcourse.backend.global.error.handler;
 import com.sikcourse.backend.global.error.code.GlobalErrorCode;
 import com.sikcourse.backend.global.error.exception.GeneralException;
 import com.sikcourse.backend.global.response.ApiResponse;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-/**
- * 애플리케이션 전역에서 발생한 예외를 공통 API 응답 형식으로 변환한다.
- */
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    /**
-     * 비즈니스 로직에서 의도적으로 발생시킨 커스텀 예외를 처리한다.
-     */
     @ExceptionHandler(GeneralException.class)
     public ResponseEntity<ApiResponse<Void>> handleGeneralException(GeneralException exception) {
         log.warn("GeneralException: {}", exception.getMessage());
@@ -28,9 +24,6 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.fail(exception.getErrorCode()));
     }
 
-    /**
-     * @Valid 검증 실패 시 첫 번째 필드 오류 메시지를 내려준다.
-     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Void>> handleValidationException(MethodArgumentNotValidException exception) {
         FieldError fieldError = exception.getBindingResult().getFieldError();
@@ -38,6 +31,35 @@ public class GlobalExceptionHandler {
                 ? GlobalErrorCode.INVALID_INPUT_VALUE.getMessage()
                 : fieldError.getDefaultMessage();
 
+        return invalidInputValueResponse(message);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleConstraintViolationException(ConstraintViolationException exception) {
+        String message = exception.getConstraintViolations().stream()
+                .findFirst()
+                .map(violation -> violation.getMessage())
+                .orElse(GlobalErrorCode.INVALID_INPUT_VALUE.getMessage());
+
+        return invalidInputValueResponse(message);
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMissingServletRequestParameterException(
+            MissingServletRequestParameterException exception
+    ) {
+        return invalidInputValueResponse(exception.getParameterName() + " is required.");
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiResponse<Void>> handleException(Exception exception) {
+        log.error("Unhandled exception", exception);
+        return ResponseEntity
+                .status(GlobalErrorCode.INTERNAL_SERVER_ERROR.getStatus())
+                .body(ApiResponse.fail(GlobalErrorCode.INTERNAL_SERVER_ERROR));
+    }
+
+    private ResponseEntity<ApiResponse<Void>> invalidInputValueResponse(String message) {
         return ResponseEntity
                 .status(GlobalErrorCode.INVALID_INPUT_VALUE.getStatus())
                 .body(new ApiResponse<>(
@@ -45,17 +67,5 @@ public class GlobalExceptionHandler {
                         GlobalErrorCode.INVALID_INPUT_VALUE.getCode(),
                         message,
                         null));
-    }
-
-    /**
-     * 처리되지 않은 예외를 최종적으로 받아 내부 서버 오류 응답으로 변환한다.
-     * 원인 파악을 위해 스택트레이스를 반드시 로그로 남긴다.
-     */
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResponse<Void>> handleException(Exception exception) {
-        log.error("Unhandled exception", exception);
-        return ResponseEntity
-                .status(GlobalErrorCode.INTERNAL_SERVER_ERROR.getStatus())
-                .body(ApiResponse.fail(GlobalErrorCode.INTERNAL_SERVER_ERROR));
     }
 }
