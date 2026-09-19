@@ -27,7 +27,11 @@ springdoc:
     path: /v3/api-docs
 
 swagger:
-  server-url: ${SWAGGER_SERVER_URL:http://localhost:8080}
+  server-url: ${SWAGGER_SERVER_URL:/}
+
+app:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://127.0.0.1:3000}
 
 tour-api:
   base-url: https://apis.data.go.kr/B551011/KorService2

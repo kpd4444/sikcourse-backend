@@ -18,7 +18,7 @@ public class SwaggerConfig {
     private static final String SECURITY_SCHEME_NAME = "JWT";
 
     @Bean
-    public OpenAPI openAPI(@Value("${swagger.server-url:http://localhost:8080}") String serverUrl) {
+    public OpenAPI openAPI(@Value("${swagger.server-url:/}") String serverUrl) {
         return new OpenAPI()
                 .info(apiInfo())
                 .servers(serverList(serverUrl))
