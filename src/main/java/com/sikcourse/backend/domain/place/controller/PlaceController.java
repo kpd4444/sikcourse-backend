@@ -1,6 +1,7 @@
 package com.sikcourse.backend.domain.place.controller;
 
 import com.sikcourse.backend.domain.place.dto.PlaceResponse;
+import com.sikcourse.backend.domain.place.entity.PlaceType;
 import com.sikcourse.backend.domain.place.service.PlaceService;
 import com.sikcourse.backend.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,9 +27,10 @@ public class PlaceController {
     @GetMapping
     public ApiResponse<List<PlaceResponse>> getPlaces(
             @RequestParam(required = false) String areaCode,
-            @RequestParam(required = false) String sigunguCode
+            @RequestParam(required = false) String sigunguCode,
+            @RequestParam(required = false) PlaceType placeType
     ) {
-        return ApiResponse.success(placeService.getPlaces(areaCode, sigunguCode));
+        return ApiResponse.success(placeService.getPlaces(areaCode, sigunguCode, placeType));
     }
 
     @Operation(summary = "Get place")

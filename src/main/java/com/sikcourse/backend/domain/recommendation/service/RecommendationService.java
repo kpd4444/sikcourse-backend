@@ -7,6 +7,7 @@ import com.sikcourse.backend.domain.message.service.GeminiMessageService;
 import com.sikcourse.backend.domain.place.entity.Place;
 import com.sikcourse.backend.domain.place.entity.PlaceType;
 import com.sikcourse.backend.domain.place.repository.PlaceRepository;
+import com.sikcourse.backend.domain.place.service.PlaceService;
 import com.sikcourse.backend.domain.recommendation.dto.RecommendedMenuResponse;
 import com.sikcourse.backend.domain.recommendation.dto.RecommendedPlaceResponse;
 import com.sikcourse.backend.domain.recommendation.dto.RecommendedWalkResponse;
@@ -31,18 +32,22 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class RecommendationService {
 
+    private static final int AUTO_SYNC_PAGE_NO = 1;
+    private static final int AUTO_SYNC_NUM_OF_ROWS = 100;
+
     private final TripRepository tripRepository;
     private final PlaceRepository placeRepository;
     private final MenuRepository menuRepository;
     private final MenuSuitabilityService menuSuitabilityService;
     private final GeminiMessageService geminiMessageService;
+    private final PlaceService placeService;
 
-    @Transactional(readOnly = true)
+    @Transactional
     public List<RecommendedMenuResponse> recommendMenus(Long userId, Long tripId) {
         return recommendMenus(userId, tripId, null);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public List<RecommendedMenuResponse> recommendDesserts(Long userId, Long tripId) {
         return recommendMenus(userId, tripId, MenuType.DESSERT);
     }
@@ -50,8 +55,10 @@ public class RecommendationService {
     private List<RecommendedMenuResponse> recommendMenus(Long userId, Long tripId, MenuType menuType) {
         Trip trip = getTrip(userId, tripId);
         List<Place> places = findTripPlaces(trip);
-        Map<Long, Place> placesById = places.stream()
-                .collect(Collectors.toMap(Place::getId, Function.identity()));
+        if (places.isEmpty()) {
+            syncTripRestaurants(trip);
+            places = findTripPlaces(trip);
+        }
         if (places.isEmpty()) {
             return List.of();
         }
@@ -60,6 +67,16 @@ public class RecommendationService {
                 .map(Place::getId)
                 .toList();
         List<Menu> menus = findMenus(placeIds, menuType);
+        if (menus.isEmpty() && shouldSyncRestaurantsForMenus(menuType)) {
+            syncTripRestaurants(trip);
+            places = findTripPlaces(trip);
+            placeIds = places.stream()
+                    .map(Place::getId)
+                    .toList();
+            menus = findMenus(placeIds, menuType);
+        }
+        Map<Long, Place> placesById = places.stream()
+                .collect(Collectors.toMap(Place::getId, Function.identity()));
         MenuSuitabilityContext context = menuSuitabilityService.createContext(userId);
 
         return menus.stream()
@@ -68,7 +85,7 @@ public class RecommendationService {
                 .toList();
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public List<RecommendedPlaceResponse> recommendPlaces(Long userId, Long tripId) {
         return recommendMenus(userId, tripId).stream()
                 .collect(Collectors.groupingBy(
@@ -85,10 +102,15 @@ public class RecommendationService {
                 .toList();
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public List<RecommendedWalkResponse> recommendWalks(Long userId, Long tripId) {
         Trip trip = getTrip(userId, tripId);
-        return findTripPlaces(trip, PlaceType.WALK).stream()
+        List<Place> places = findTripPlaces(trip, PlaceType.WALK);
+        if (places.isEmpty()) {
+            syncTripWalks(trip);
+            places = findTripPlaces(trip, PlaceType.WALK);
+        }
+        return places.stream()
                 .map(this::toRecommendedWalk)
                 .toList();
     }
@@ -171,6 +193,28 @@ public class RecommendationService {
             return menuRepository.findAllByPlaceIdInOrderByNameAsc(placeIds);
         }
         return menuRepository.findAllByPlaceIdInAndMenuTypeOrderByNameAsc(placeIds, menuType);
+    }
+
+    private void syncTripRestaurants(Trip trip) {
+        placeService.syncRestaurantsSafely(
+                trip.getAreaCode(),
+                trip.getSigunguCode(),
+                AUTO_SYNC_PAGE_NO,
+                AUTO_SYNC_NUM_OF_ROWS
+        );
+    }
+
+    private void syncTripWalks(Trip trip) {
+        placeService.syncWalksSafely(
+                trip.getAreaCode(),
+                trip.getSigunguCode(),
+                AUTO_SYNC_PAGE_NO,
+                AUTO_SYNC_NUM_OF_ROWS
+        );
+    }
+
+    private boolean shouldSyncRestaurantsForMenus(MenuType menuType) {
+        return menuType == null || menuType == MenuType.DESSERT;
     }
 
     private Comparator<RecommendedMenuResponse> menuRecommendationComparator() {

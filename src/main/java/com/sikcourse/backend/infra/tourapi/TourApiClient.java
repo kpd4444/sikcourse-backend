@@ -3,6 +3,7 @@ package com.sikcourse.backend.infra.tourapi;
 import com.sikcourse.backend.global.config.TourApiProperties;
 import com.sikcourse.backend.infra.tourapi.dto.TourApiEnvelope;
 import com.sikcourse.backend.infra.tourapi.dto.TourApiResponse;
+import com.sikcourse.backend.infra.tourapi.dto.TourAreaCodeItem;
 import com.sikcourse.backend.infra.tourapi.dto.TourDetailCommonItem;
 import com.sikcourse.backend.infra.tourapi.dto.TourDetailIntroItem;
 import com.sikcourse.backend.infra.tourapi.dto.TourRestaurantItem;
@@ -99,6 +100,27 @@ public class TourApiClient {
         params.put("arrange", "A");
 
         return get("/locationBasedList2", params, TourRestaurantItem.class);
+    }
+
+    public TourApiResponse<TourRestaurantItem> searchKeyword2(String keyword, Integer pageNo, Integer numOfRows) {
+        Map<String, String> params = defaultParams(pageNo, numOfRows);
+        params.put("keyword", keyword);
+        params.put("arrange", "A");
+
+        return get("/searchKeyword2", params, TourRestaurantItem.class);
+    }
+
+    public TourApiResponse<TourAreaCodeItem> areaCode2() {
+        return areaCode2(null);
+    }
+
+    public TourApiResponse<TourAreaCodeItem> areaCode2(String areaCode) {
+        Map<String, String> params = defaultParams(1, 100);
+        if (areaCode != null && !areaCode.isBlank()) {
+            params.put("areaCode", areaCode);
+        }
+
+        return get("/areaCode2", params, TourAreaCodeItem.class);
     }
 
     public TourApiResponse<TourDetailCommonItem> detailCommon2(String contentId) {
