@@ -44,6 +44,8 @@ public class SecurityConfig {
                                 "/health",
                                 "/api/auth/signup",
                                 "/api/auth/login",
+                                "/api/admin/places/sync/**",
+                                "/api/dev/places/**",
                                 "/api/dev/tour/**",
                                 "/api/places",
                                 "/api/places/*",

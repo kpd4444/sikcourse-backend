@@ -8,7 +8,9 @@ import com.sikcourse.backend.domain.meal.entity.MenuType;
 import com.sikcourse.backend.domain.meal.repository.MenuRepository;
 import com.sikcourse.backend.domain.message.service.GeminiMessageService;
 import com.sikcourse.backend.domain.place.entity.Place;
+import com.sikcourse.backend.domain.place.entity.PlaceType;
 import com.sikcourse.backend.domain.place.repository.PlaceRepository;
+import com.sikcourse.backend.domain.place.service.PlaceService;
 import com.sikcourse.backend.domain.recommendation.dto.RecommendedMenuResponse;
 import com.sikcourse.backend.domain.recommendation.dto.RecommendedPlaceResponse;
 import com.sikcourse.backend.domain.suitability.dto.MenuSuitabilityResponse;
@@ -117,6 +119,38 @@ class RecommendationServiceTest {
                 .thenReturn(List.of());
 
         assertThat(context.service.recommendMenus(1L, 1L)).isEmpty();
+        verify(context.placeService).syncRestaurantsSafely("39", "4", 1, 100);
+    }
+
+    @Test
+    void recommendMenusSyncsRestaurantsWhenMenusAreMissing() {
+        TestContext context = testContext();
+        Trip trip = trip();
+        Place place = place(1L, "Jeju Abalone");
+
+        when(context.tripRepository.findByIdAndUserId(1L, 1L)).thenReturn(Optional.of(trip));
+        when(context.placeRepository.findAllByAreaCodeAndSigunguCodeOrderByTitleAsc("39", "4"))
+                .thenReturn(List.of(place));
+        when(context.menuRepository.findAllByPlaceIdInOrderByNameAsc(List.of(1L)))
+                .thenReturn(List.of());
+
+        assertThat(context.service.recommendMenus(1L, 1L)).isEmpty();
+        verify(context.placeService).syncRestaurantsSafely("39", "4", 1, 100);
+    }
+
+    @Test
+    void recommendWalksSyncsWalksWhenWalkPlacesAreMissing() {
+        TestContext context = testContext();
+
+        when(context.tripRepository.findByIdAndUserId(1L, 1L)).thenReturn(Optional.of(trip()));
+        when(context.placeRepository.findAllByAreaCodeAndSigunguCodeAndPlaceTypeOrderByTitleAsc(
+                "39",
+                "4",
+                PlaceType.WALK
+        )).thenReturn(List.of());
+
+        assertThat(context.service.recommendWalks(1L, 1L)).isEmpty();
+        verify(context.placeService).syncWalksSafely("39", "4", 1, 100);
     }
 
     @Test
@@ -154,12 +188,14 @@ class RecommendationServiceTest {
         MenuRepository menuRepository = mock(MenuRepository.class);
         MenuSuitabilityService menuSuitabilityService = mock(MenuSuitabilityService.class);
         GeminiMessageService geminiMessageService = mock(GeminiMessageService.class);
+        PlaceService placeService = mock(PlaceService.class);
         RecommendationService service = new RecommendationService(
                 tripRepository,
                 placeRepository,
                 menuRepository,
                 menuSuitabilityService,
-                geminiMessageService
+                geminiMessageService,
+                placeService
         );
 
         return new TestContext(
@@ -167,6 +203,7 @@ class RecommendationServiceTest {
                 placeRepository,
                 menuRepository,
                 menuSuitabilityService,
+                placeService,
                 service
         );
     }
@@ -258,6 +295,7 @@ class RecommendationServiceTest {
             PlaceRepository placeRepository,
             MenuRepository menuRepository,
             MenuSuitabilityService menuSuitabilityService,
+            PlaceService placeService,
             RecommendationService service
     ) {
     }

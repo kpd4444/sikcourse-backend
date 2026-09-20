@@ -8,7 +8,9 @@ import org.springframework.context.annotation.Configuration;
         TourApiProperties.class,
         JwtProperties.class,
         GeminiProperties.class,
-        CorsProperties.class
+        CorsProperties.class,
+        AiMenuMasterProperties.class,
+        AdminProperties.class
 })
 public class ConfigurationPropertiesConfig {
 }

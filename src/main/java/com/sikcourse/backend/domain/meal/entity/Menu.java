@@ -52,4 +52,14 @@ public class Menu extends BaseTimeEntity {
         this.sodium = sodium;
         this.sugar = sugar;
     }
+
+    public void updateNutrition(Integer calories, Integer sodium, Integer sugar) {
+        this.calories = calories;
+        this.sodium = sodium;
+        this.sugar = sugar;
+    }
+
+    public void updateMenuType(MenuType menuType) {
+        this.menuType = menuType == null ? MenuType.MEAL : menuType;
+    }
 }
