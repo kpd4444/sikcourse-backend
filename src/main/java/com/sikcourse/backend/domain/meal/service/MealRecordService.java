@@ -3,7 +3,10 @@ package com.sikcourse.backend.domain.meal.service;
 import com.sikcourse.backend.domain.health.entity.HealthProfile;
 import com.sikcourse.backend.domain.health.error.HealthErrorCode;
 import com.sikcourse.backend.domain.health.repository.HealthProfileRepository;
+import com.sikcourse.backend.domain.meal.dto.CreateMealRecordItemRequest;
 import com.sikcourse.backend.domain.meal.dto.CreateMealRecordRequest;
+import com.sikcourse.backend.domain.meal.dto.CreateMealRecordsBatchRequest;
+import com.sikcourse.backend.domain.meal.dto.CreateMealRecordsBatchResponse;
 import com.sikcourse.backend.domain.meal.dto.DailyNutritionSummaryResponse;
 import com.sikcourse.backend.domain.meal.dto.MealRecordResponse;
 import com.sikcourse.backend.domain.meal.entity.MealRecord;
@@ -46,6 +49,24 @@ public class MealRecordService {
                 .build();
 
         return MealRecordResponse.from(mealRecordRepository.save(mealRecord), menu);
+    }
+
+    @Transactional
+    public CreateMealRecordsBatchResponse createBatch(Long userId, CreateMealRecordsBatchRequest request) {
+        validateEatenAt(request.eatenAt());
+
+        List<MealRecordResponse> records = request.items().stream()
+                .map(item -> createBatchItem(userId, request, item))
+                .toList();
+
+        DailyNutritionSummaryResponse nutritionSummary = getTodaySummary(userId);
+        return new CreateMealRecordsBatchResponse(
+                records,
+                records.stream().mapToInt(MealRecordResponse::calories).sum(),
+                records.stream().mapToInt(MealRecordResponse::sodium).sum(),
+                records.stream().mapToInt(MealRecordResponse::sugar).sum(),
+                nutritionSummary
+        );
     }
 
     @Transactional(readOnly = true)
@@ -111,5 +132,22 @@ public class MealRecordService {
         if (eatenAt.isAfter(LocalDateTime.now(clock))) {
             throw new GeneralException(MealErrorCode.INVALID_EATEN_AT);
         }
+    }
+
+    private MealRecordResponse createBatchItem(
+            Long userId,
+            CreateMealRecordsBatchRequest request,
+            CreateMealRecordItemRequest item
+    ) {
+        Menu menu = menuService.getById(item.menuId());
+        MealRecord mealRecord = MealRecord.builder()
+                .userId(userId)
+                .menuId(menu.getId())
+                .mealType(request.mealType())
+                .eatenAt(request.eatenAt())
+                .servingAmount(item.servingAmount())
+                .build();
+
+        return MealRecordResponse.from(mealRecordRepository.save(mealRecord), menu);
     }
 }
