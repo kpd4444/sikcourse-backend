@@ -125,6 +125,7 @@ class GeminiMessageServiceTest {
                 "Bibimbap",
                 MealType.LUNCH,
                 LocalDateTime.of(2026, 9, 16, 12, 30),
+                BigDecimal.ONE,
                 600,
                 700,
                 15

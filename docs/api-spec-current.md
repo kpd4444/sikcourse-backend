@@ -1156,7 +1156,159 @@
 
 ---
 
-# 13. 운영용 산책 코스 동기화
+# 13. 복수 식사 기록 등록
+
+## 1. API 개요
+
+| **분류** | **내용** |
+| --- | --- |
+| Method | POST |
+| URL | `/api/meal-records/batch` |
+| Description | 같은 식사 시간과 식사 유형으로 여러 메뉴를 한 번에 식사 기록으로 등록합니다. 각 메뉴는 섭취 인분 수(`servingAmount`)를 받아 영양 정보를 비율 계산해 저장/응답합니다. |
+| Auth | 필요 |
+| Note | 현재 서비스/DTO 구현 기준 명세입니다. 컨트롤러에는 `POST /api/meal-records/batch` 매핑 추가가 필요합니다. 성공 후 오늘 영양 요약을 함께 반환하므로 프론트 영양 카드 갱신에 사용할 수 있습니다. |
+
+---
+
+## 2. Request
+
+### 2-1. Header
+
+| **Key** | **Value (Example)** | **Required** | **Description** |
+| --- | --- | --- | --- |
+| Authorization | `Bearer {accessToken}` | O | JWT Access Token |
+| Content-Type | `application/json` | O | JSON 요청 |
+
+### 2-2. Path Variable
+
+없음
+
+### 2-3. Query String
+
+없음
+
+### 2-4. Request Body
+
+```json
+{
+  "mealType": "LUNCH",
+  "eatenAt": "2026-09-20T12:00:00",
+  "items": [
+    {
+      "menuId": 266,
+      "servingAmount": 1.0
+    },
+    {
+      "menuId": 300,
+      "servingAmount": 0.5
+    }
+  ]
+}
+```
+
+| **Field** | **Type** | **Required** | **Description** |
+| --- | --- | --- | --- |
+| mealType | Enum | O | `BREAKFAST`, `LUNCH`, `DINNER`, `SNACK` |
+| eatenAt | LocalDateTime | O | 식사 시간. 미래 시간은 불가 |
+| items | Array | O | 등록할 식사 기록 항목 목록. 1개 이상 필요 |
+| items[].menuId | Long | O | 먹은 메뉴 ID |
+| items[].servingAmount | Decimal | O | 섭취 인분 수. `0.01` 이상 |
+
+---
+
+## 3. Response
+
+### 3-1. Success Response
+
+```json
+{
+  "isSuccess": true,
+  "code": "COMMON_200",
+  "message": "요청에 성공했습니다.",
+  "result": {
+    "records": [
+      {
+        "mealRecordId": 2,
+        "menuId": 266,
+        "menuName": "고기국수",
+        "mealType": "LUNCH",
+        "eatenAt": "2026-09-20T12:00:00",
+        "servingAmount": 1.0,
+        "calories": 450,
+        "sodium": 1100,
+        "sugar": 15
+      },
+      {
+        "mealRecordId": 3,
+        "menuId": 300,
+        "menuName": "아메리카노",
+        "mealType": "LUNCH",
+        "eatenAt": "2026-09-20T12:00:00",
+        "servingAmount": 0.5,
+        "calories": 5,
+        "sodium": 3,
+        "sugar": 0
+      }
+    ],
+    "totalCalories": 455,
+    "totalSodium": 1103,
+    "totalSugar": 15,
+    "nutritionSummary": {
+      "calorieGoal": 2300,
+      "calorieConsumed": 455,
+      "calorieRemaining": 1845,
+      "sodiumGoal": 2000,
+      "sodiumConsumed": 1103,
+      "sodiumRemaining": 897,
+      "sugarGoal": 60,
+      "sugarConsumed": 15,
+      "sugarRemaining": 45,
+      "carePointMessage": "오늘은 주요 영양 목표를 비교적 균형 있게 관리했어요."
+    }
+  }
+}
+```
+
+응답 필드 설명
+
+| **Field** | **Type** | **Description** |
+| --- | --- | --- |
+| result.records | Array | 생성된 식사 기록 목록 |
+| result.records[].mealRecordId | Long | 식사 기록 ID |
+| result.records[].menuId | Long | 메뉴 ID |
+| result.records[].menuName | String | 메뉴 이름 |
+| result.records[].mealType | Enum | 식사 유형 |
+| result.records[].eatenAt | LocalDateTime | 식사 시간 |
+| result.records[].servingAmount | Decimal | 섭취 인분 수 |
+| result.records[].calories | Integer | 인분 수가 반영된 칼로리 |
+| result.records[].sodium | Integer | 인분 수가 반영된 나트륨 |
+| result.records[].sugar | Integer | 인분 수가 반영된 당류 |
+| result.totalCalories | Integer | 이번 요청으로 등록된 기록의 총 칼로리 |
+| result.totalSodium | Integer | 이번 요청으로 등록된 기록의 총 나트륨 |
+| result.totalSugar | Integer | 이번 요청으로 등록된 기록의 총 당류 |
+| result.nutritionSummary | Object | 등록 후 갱신된 오늘 영양 요약 |
+
+### 3-2. Error Response
+
+```json
+{
+  "isSuccess": false,
+  "code": "COMMON_400",
+  "message": "검증 실패 메시지",
+  "result": null
+}
+```
+
+| **HTTP Status** | **Error Code** | **Message** | **Cause & Solution** |
+| --- | --- | --- | --- |
+| 400 | COMMON_400 | 검증 실패 메시지 | `mealType`, `eatenAt`, `items`, `items[].menuId`, `items[].servingAmount` 누락 또는 enum/형식 오류 |
+| 400 | MEAL_400 | 유효하지 않은 식사 시간입니다. | `eatenAt`이 현재보다 미래인 경우 |
+| 401 | COMMON_401 | 인증이 필요합니다. | JWT 누락 또는 유효하지 않은 토큰 |
+| 404 | MEAL_404 | 메뉴를 찾을 수 없습니다. | 존재하지 않는 메뉴 ID 포함 |
+| 404 | HEALTH_404 | 건강 프로필을 찾을 수 없습니다. | 오늘 영양 요약 계산을 위한 건강 프로필 생성 필요 |
+| 500 | COMMON_500 | 서버 내부 오류가 발생했습니다. | 서버 내부 로직 오류 |
+
+# 14. 운영용 산책 코스 동기화
 
 ## 1. API 개요
 
