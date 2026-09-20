@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,8 +37,7 @@ public class GeminiMessageService {
                 reasonText(suitability.reasons())
         );
 
-        return geminiClient.generate(prompt)
-                .orElseGet(() -> fallbackMenuMessage(suitability));
+        return generatedMessage(prompt, () -> fallbackMenuMessage(suitability));
     }
 
     public String mealCompletionPopupMessage(
@@ -68,8 +68,7 @@ public class GeminiMessageService {
                 walkAvailable
         );
 
-        return geminiClient.generate(prompt)
-                .orElseGet(() -> fallbackPopupMessage(dessertAvailable, walkAvailable));
+        return generatedMessage(prompt, () -> fallbackPopupMessage(dessertAvailable, walkAvailable));
     }
 
     public String placeRecommendationPoint(Place place) {
@@ -92,8 +91,7 @@ public class GeminiMessageService {
                 place.getPlaceType()
         );
 
-        return geminiClient.generate(prompt)
-                .orElseGet(() -> fallbackPlaceRecommendationPoint(place));
+        return generatedMessage(prompt, () -> fallbackPlaceRecommendationPoint(place));
     }
 
     public String dailySummaryMessage(
@@ -125,8 +123,7 @@ public class GeminiMessageService {
                 summary.sugarConsumed()
         );
 
-        return geminiClient.generate(prompt)
-                .orElseGet(() -> fallbackDailySummaryMessage(summary));
+        return generatedMessage(prompt, () -> fallbackDailySummaryMessage(summary));
     }
 
     public String tripCourseMessage(Trip trip) {
@@ -148,8 +145,7 @@ public class GeminiMessageService {
                 trip.getEndDate()
         );
 
-        return geminiClient.generate(prompt)
-                .orElseGet(() -> fallbackTripCourseMessage(trip));
+        return generatedMessage(prompt, () -> fallbackTripCourseMessage(trip));
     }
 
     public String tripCourseFeedbackMessage(Trip trip) {
@@ -167,8 +163,22 @@ public class GeminiMessageService {
                 trip.getEndDate()
         );
 
+        return generatedMessage(prompt, () -> fallbackTripCourseFeedbackMessage(trip));
+    }
+
+    private String generatedMessage(String prompt, Supplier<String> fallbackSupplier) {
         return geminiClient.generate(prompt)
-                .orElseGet(() -> fallbackTripCourseFeedbackMessage(trip));
+                .filter(this::isUsableMessage)
+                .orElseGet(fallbackSupplier);
+    }
+
+    private boolean isUsableMessage(String message) {
+        if (message == null) {
+            return false;
+        }
+
+        String normalized = message.replaceAll("\\s+", " ").trim();
+        return normalized.length() >= 10;
     }
 
     private String reasonText(List<SuitabilityReasonResponse> reasons) {

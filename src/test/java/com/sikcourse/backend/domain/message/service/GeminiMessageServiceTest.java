@@ -93,6 +93,19 @@ class GeminiMessageServiceTest {
     }
 
     @Test
+    void dailySummaryMessageFallsBackWhenGeminiReturnsTooShortText() {
+        GeminiClient geminiClient = mock(GeminiClient.class);
+        GeminiMessageService service = new GeminiMessageService(geminiClient);
+        DailyNutritionSummaryResponse summary = summary(100, 800, 10, -200, 2200, 20);
+        when(geminiClient.generate(contains("Bibimbap"))).thenReturn(Optional.of("오늘 달"));
+
+        String response = service.dailySummaryMessage(List.of(mealRecord()), summary);
+
+        assertThat(response).isNotEqualTo("오늘 달");
+        assertThat(response).isNotBlank();
+    }
+
+    @Test
     void placeRecommendationPointReturnsGeneratedMessage() {
         GeminiClient geminiClient = mock(GeminiClient.class);
         GeminiMessageService service = new GeminiMessageService(geminiClient);

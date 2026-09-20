@@ -92,6 +92,13 @@ public class GeminiClient {
 
     private Optional<String> extractText(String responseBody) throws Exception {
         JsonNode root = objectMapper.readTree(responseBody);
+        JsonNode candidateNode = root.path("candidates").path(0);
+        JsonNode finishReasonNode = candidateNode.path("finishReason");
+        if (!finishReasonNode.isMissingNode() && "MAX_TOKENS".equals(finishReasonNode.asText())) {
+            log.warn("Gemini API response was truncated by maxOutputTokens.");
+            return Optional.empty();
+        }
+
         JsonNode textNode = root.path("candidates")
                 .path(0)
                 .path("content")
