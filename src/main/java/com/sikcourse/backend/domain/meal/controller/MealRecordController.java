@@ -1,6 +1,8 @@
 package com.sikcourse.backend.domain.meal.controller;
 
 import com.sikcourse.backend.domain.meal.dto.CreateMealRecordRequest;
+import com.sikcourse.backend.domain.meal.dto.CreateMealRecordsBatchRequest;
+import com.sikcourse.backend.domain.meal.dto.CreateMealRecordsBatchResponse;
 import com.sikcourse.backend.domain.meal.dto.CompleteMealRequest;
 import com.sikcourse.backend.domain.meal.dto.CompleteMealResponse;
 import com.sikcourse.backend.domain.meal.dto.DailyNutritionSummaryResponse;

@@ -14,6 +14,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Getter
@@ -39,11 +40,19 @@ public class MealRecord extends BaseTimeEntity {
     @Column(name = "eaten_at", nullable = false)
     private LocalDateTime eatenAt;
 
+    @Column(name = "serving_amount", precision = 5, scale = 2)
+    private BigDecimal servingAmount;
+
     @Builder
-    private MealRecord(Long userId, Long menuId, MealType mealType, LocalDateTime eatenAt) {
+    private MealRecord(Long userId, Long menuId, MealType mealType, LocalDateTime eatenAt, BigDecimal servingAmount) {
         this.userId = userId;
         this.menuId = menuId;
         this.mealType = mealType;
         this.eatenAt = eatenAt;
+        this.servingAmount = servingAmount == null ? BigDecimal.ONE : servingAmount;
+    }
+
+    public BigDecimal getServingAmount() {
+        return servingAmount == null ? BigDecimal.ONE : servingAmount;
     }
 }
