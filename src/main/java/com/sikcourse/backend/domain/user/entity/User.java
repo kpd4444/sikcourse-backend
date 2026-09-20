@@ -15,6 +15,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Entity
 @Table(
@@ -43,11 +45,24 @@ public class User extends BaseTimeEntity {
     @Column(nullable = false, length = 20)
     private UserRole role;
 
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
     @Builder
     private User(String email, String password, String nickname, UserRole role) {
         this.email = email;
         this.password = password;
         this.nickname = nickname;
         this.role = role;
+    }
+
+    public void changePassword(String password) {
+        this.password = password;
+    }
+
+    public void withdraw(LocalDateTime deletedAt) {
+        this.email = "withdrawn-" + id + "@sikcourse.local";
+        this.nickname = "withdrawn";
+        this.deletedAt = deletedAt;
     }
 }

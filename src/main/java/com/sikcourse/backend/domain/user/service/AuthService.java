@@ -52,7 +52,7 @@ public class AuthService {
 
     @Transactional(readOnly = true)
     public LoginResponse login(LoginRequest request) {
-        User user = userRepository.findByEmail(request.email()).orElse(null);
+        User user = userRepository.findByEmailAndDeletedAtIsNull(request.email()).orElse(null);
         String encodedPassword = (user == null) ? DUMMY_PASSWORD_HASH : user.getPassword();
         boolean passwordMatches = passwordHasher.matches(request.password(), encodedPassword);
 

@@ -1,5 +1,6 @@
 package com.sikcourse.backend.global.security;
 
+import com.sikcourse.backend.domain.user.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,6 +21,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final String BEARER_PREFIX = "Bearer ";
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final UserRepository userRepository;
 
     @Override
     protected void doFilterInternal(
@@ -31,12 +33,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (token != null) {
             try {
                 AuthUser authUser = jwtTokenProvider.parseAccessToken(token);
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        authUser,
-                        null,
-                        authUser.authorities()
-                );
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                if (userRepository.existsByIdAndDeletedAtIsNull(authUser.userId())) {
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                            authUser,
+                            null,
+                            authUser.authorities()
+                    );
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
             } catch (IllegalArgumentException exception) {
                 SecurityContextHolder.clearContext();
             }
