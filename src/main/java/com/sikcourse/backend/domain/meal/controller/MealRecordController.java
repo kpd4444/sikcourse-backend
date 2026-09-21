@@ -42,6 +42,15 @@ public class MealRecordController {
         return ApiResponse.success(mealRecordService.create(authUser.userId(), request));
     }
 
+    @Operation(summary = "복수 식사 기록 등록")
+    @PostMapping("/batch")
+    public ApiResponse<CreateMealRecordsBatchResponse> createBatch(
+            @AuthenticationPrincipal AuthUser authUser,
+            @Valid @RequestBody CreateMealRecordsBatchRequest request
+    ) {
+        return ApiResponse.success(mealRecordService.createBatch(authUser.userId(), request));
+    }
+
     @Operation(summary = "식사 완료")
     @PostMapping("/complete")
     public ApiResponse<CompleteMealResponse> complete(
